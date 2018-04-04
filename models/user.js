@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
+const {Schema} = require('mongoose');
+const _ = require('lodash');
 
-var UserSchema = new mongoose.Schema({
+
+var UserSchema = Schema({
 	username:{
 		type:String,
 		required:true,
@@ -29,13 +32,16 @@ var UserSchema = new mongoose.Schema({
         type:String
     },
     deleted:{
-        type:Boolean
+        type:Boolean,
+        default:false
     },
     createdAt:{
-        type:Date
+        type:Date,
+        default:Date.now()
     },
     updatedAt:{
-        type:Date
+        type:Date,
+        default:Date.now()
     }
 });
 
@@ -50,7 +56,7 @@ UserSchema.methods.toJSON = function(){
 
 var User = mongoose.model('User',UserSchema);
 
-var TokenSchema = new mongoose.Schema({
+var TokenSchema = Schema({
     userId:{
         type:Schema.Types.ObjectId,
         ref:User
@@ -78,7 +84,7 @@ TokenSchema.methods.generateAuthToken = async function(userId,deviceId){
     try{
         var token = await token.save();
         return token;
-    }catch(e){
+    }catch(e){       
         return e; 
     }
 };

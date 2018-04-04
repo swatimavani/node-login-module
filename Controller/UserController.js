@@ -1,14 +1,20 @@
-module.exports = new User;
-function  User() {
+module.exports = new UserController;
+
+const {carrom} = require('../config/constant.conf');
+const _ = require('lodash');
+const {User} = require('../models/user');
+
+function  UserController() {
     this.user = {};
 }
 
-User.prototype.login = async function (req,res) {
-
+UserController.prototype.login = async function (req,res) {   
     
-    this.user = req.body;
-    
-    
+    var userData = _.pick(req.body,['facebookId','deviceId','username','profileLink','data']);
+    userData.primaryCurrency = carrom.game.primaryCurrency;
+    userData.secondaryCurrency = carrom.game.secondaryCurrency;
+    this.user = await new User(userData).save();
+    console.log(this.user);
     res.send(this.user);
 }
 
