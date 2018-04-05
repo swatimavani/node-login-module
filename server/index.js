@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-var routes = require('../Router/user.route');
+var routes = require('../router/user.route');
 var bodyParser = require('body-parser');
 const mongoose = require('../db/mongoose.js');
 const {carrom} = require('../config/constant.conf');

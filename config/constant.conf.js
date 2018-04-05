@@ -1,3 +1,4 @@
+const secret = "TagGamesSecret12#"
 const carrom = {
     PORT:3001,
     database:"carrom",
@@ -7,4 +8,4 @@ const carrom = {
     }
 }
 
-module.exports = {carrom};
+module.exports = {carrom,secret};
