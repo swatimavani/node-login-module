@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const {Schema} = require('mongoose');
 const _ = require('lodash');
-
+const jwt = require('jsonwebtoken');
+const {secret} = require('../config/constant.conf');
 
 var UserSchema = Schema({
 	username:{
@@ -26,10 +27,12 @@ var UserSchema = Schema({
         type:Number
     },
     profileLink:{
-        type:String
+        type:String,
+        default:""
     },
     data:{
-        type:String
+        type:String,
+        default:""
     },
     deleted:{
         type:Boolean,
@@ -49,17 +52,27 @@ var UserSchema = Schema({
 UserSchema.methods.toJSON = function(){
 	var user = this;
 	var userObject = user.toObject();
-	return _.pick(userObject,['_id','email']);
+	return _.pick(userObject,['_id','username','profileLink','primaryCurrency','secondaryCurrency']);
 };
 
-
+UserSchema.methods.generateAuthToken = async function(deviceId){
+    var user = this;
+    var generatedToken = jwt.sign({_id:this._id.toHexString()},secret).toString();
+    var token = new Token({userId:this._id,deviceId:deviceId,token:generatedToken});
+    try{
+        var token = await token.save();
+        return token.token;
+    }catch(e){       
+        return e; 
+    }
+};
 
 var User = mongoose.model('User',UserSchema);
 
 var TokenSchema = Schema({
     userId:{
         type:Schema.Types.ObjectId,
-        ref:User
+        ref:'User'
     },
     deviceId:{
 		type:String	
@@ -78,17 +91,22 @@ var TokenSchema = Schema({
     }
 });
 
-TokenSchema.methods.generateAuthToken = async function(userId,deviceId){
-    var generatedToken = jwt.sign({_id:userId.toHexString()},'abc123').toString();
-    var token = new Token({deviceId:deviceId,token:generatedToken});
-    try{
-        var token = await token.save();
-        return token;
-    }catch(e){       
-        return e; 
-    }
-};
-
+TokenSchema.statics.findByToken = async function(token){
+	var Token = this;
+	var decoded;
+	try{
+        decoded = jwt.verify(token,secret);
+        console.log(decoded);       
+        var token = await Token.findOne({
+                userId:decoded._id,
+                token:token
+            }).populate('userId').exec();           
+        return token.userId;
+	}catch(e){
+		return (e);
+	}
+	
+}
 
 var Token = mongoose.model('Token',TokenSchema);
 
