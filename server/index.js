@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
 app.use('/user',routes);
 
-require('./socketEvent/game.socket')(io, "test");
+require('../socketEvent/game.socket')(io, carrom);
 
 server.listen(3001, () => {
     console.log("server on 3001");
