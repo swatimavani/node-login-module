@@ -1,14 +1,13 @@
 module.exports = new SocketServices;
 
-function  SocketServices(config) {
-    this.config = config;   
+function SocketServices() {   
 }
 
-const maxPlayersinRoom = this.config.game.maxPlayersinRoom;
-const maxRooms = this.config.game.maxRooms;
-const allowSwitchingRoom = this.config.game.allowSwitchingRoom;       
+const maxPlayersinRoom = config.game.maxPlayersinRoom;
+const maxRooms = config.game.maxRooms;
+const allowSwitchingRoom = config.game.allowSwitchingRoom;       
 
-var connectedUser = new Array();
+var connectedUser = [];
 var rooms = {};
 var player = {};
 var playerRoom = {};
@@ -20,12 +19,6 @@ SocketServices.prototype.addUser = function(data){
     addUserInConnectedUser(_userId);
     console.log(connectedUser);
 }
-
-// const messageService = (io,socket,message,callback) => {
-//     console.log(message);   
-//     // callback("messageServiceCalled");
-// }
-
 
 function addUserInConnectedUser(_userId){
     if(!connectedUser[_userId]){

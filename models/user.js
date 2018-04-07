@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const {Schema} = require('mongoose');
 const _ = require('lodash');
 const jwt = require('jsonwebtoken');
-const {secret} = require('../config/constant.conf');
+const config = require('../config/constant.conf');
 
 var UserSchema = Schema({
 	username:{
@@ -29,6 +29,10 @@ var UserSchema = Schema({
     profileLink:{
         type:String,
         default:""
+    },
+    status:{
+        type:String,
+        default:config.userStatus[0]
     },
     data:{
         type:String,
@@ -57,7 +61,7 @@ UserSchema.methods.toJSON = function(){
 
 UserSchema.methods.generateAuthToken = async function(deviceId){
     var user = this;
-    var generatedToken = jwt.sign({_id:this._id.toHexString()},secret).toString();
+    var generatedToken = jwt.sign({_id:this._id.toHexString()},config.secret).toString();
     var token = new Token({userId:this._id,deviceId:deviceId,token:generatedToken});
     try{
         var token = await token.save();
@@ -95,7 +99,7 @@ TokenSchema.statics.findByToken = async function(token){
 	var Token = this;
 	var decoded;
 	try{
-        decoded = jwt.verify(token,secret);
+        decoded = jwt.verify(token,config.secret);
         console.log(decoded);       
         var token = await Token.findOne({
                 userId:decoded._id,

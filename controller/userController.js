@@ -1,6 +1,4 @@
 module.exports = new UserController;
-
-const {carrom} = require('../config/constant.conf');
 const _ = require('lodash');
 const {User} = require('../models/user');
 const {Token} = require('../models/user');
@@ -21,8 +19,8 @@ UserController.prototype.login = async function (req,res) {
     var user = await User.findOneAndUpdate(where,dataForUpdate,{new:true});
 
     if(!user){
-        userData.primaryCurrency = carrom.game.primaryCurrency;
-        userData.secondaryCurrency = carrom.game.secondaryCurrency;
+        userData.primaryCurrency = config.game.primaryCurrency;
+        userData.secondaryCurrency = config.game.secondaryCurrency;
         user = await new User(userData).save();
     }
     if(user){
