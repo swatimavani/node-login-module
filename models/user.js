@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const {Schema} = require('mongoose');
 const _ = require('lodash');
 const jwt = require('jsonwebtoken');
-const config = require('../config/constant.conf');
 
 var UserSchema = Schema({
 	username:{
@@ -18,7 +17,8 @@ var UserSchema = Schema({
         type:String
     },
     facebookId:{
-        type:String
+        type:String,
+        default:null
     },
     primaryCurrency:{
         type:Number

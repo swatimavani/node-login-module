@@ -1,9 +1,11 @@
 const express = require('express');
 const app = express();
+const conf  = require('../config/constant.conf').carrom;
+global.config = conf;
 var routes = require('../router/user.route');
 var bodyParser = require('body-parser');
 const mongoose = require('../db/mongoose.js');
-global.config  = require('../config/constant.conf').carrom;
+
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 

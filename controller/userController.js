@@ -10,10 +10,17 @@ function  UserController() {
 UserController.prototype.login = async function (req,res) {    
     var userData = _.pick(req.body,['facebookId','deviceId','username','profileLink','data']);
     var where = {deleted:false};
+
     if(userData.facebookId){
         where.facebookId = userData.facebookId;
-    }else{
         where.deviceId = userData.deviceId;
+
+       var deletedUser =  await User.findOneAndRemove({deviceId:userData.deviceId,facebookId:null});
+       console.log("deleted user " + deletedUser);
+       var deleteTokon = await Token.remove({userId : deletedUser._id});
+       
+    }else{
+        where.deviceId = userData.deviceId;       
     }
     var dataForUpdate = {username:userData.username};
     var user = await User.findOneAndUpdate(where,dataForUpdate,{new:true});

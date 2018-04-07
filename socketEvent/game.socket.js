@@ -4,9 +4,7 @@ var services = require('./game.socket.service');
 module.exports = (io,config) => {   
     //Enable cross domain access from evry wahere
     //io.origins('*:*'); 
-    services = new services(config);  
-    io.on('connection',(socket)=> {     
-        console.log(testing);  
+    io.on('connection',(socket)=> {            
         global.socket = socket;
         console.log("Connected");
         socket.on('addUser',(data) => services.addUser(data));
