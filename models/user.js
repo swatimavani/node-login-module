@@ -21,10 +21,12 @@ var UserSchema = Schema({
         default:null
     },
     primaryCurrency:{
-        type:Number
+        type:Number,
+        default:config.game.primaryCurrency
     },
     secondaryCurrency:{
-        type:Number
+        type:Number,
+        default:config.game.secondaryCurrency
     },
     profileLink:{
         type:String,
@@ -99,8 +101,7 @@ TokenSchema.statics.findByToken = async function(token){
 	var Token = this;
 	var decoded;
 	try{
-        decoded = jwt.verify(token,config.secret);
-        console.log(decoded);       
+        decoded = jwt.verify(token,config.secret);             
         var token = await Token.findOne({
                 userId:decoded._id,
                 token:token
