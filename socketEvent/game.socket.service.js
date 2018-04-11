@@ -26,8 +26,7 @@ SocketServices.prototype.createOrJoin = function(socket,data,io){
     console.log('user id ' + socket.userId);
     if(!connectedUser[socket.userId]["isInRoom"]){
         if(existingRooms.length == 0){
-            CreateRoom(socket,socket.userId);
-       
+            CreateRoom(socket,socket.userId);  
         }else{
             JoinRoom(socket.userId,io);
 
@@ -37,10 +36,24 @@ SocketServices.prototype.createOrJoin = function(socket,data,io){
     }
     else{
         console.log(socket.userId + " is already in room");
-        
     }    
 }
 
+SocketServices.prototype.generateRequest = function(socket,data){
+    
+    var newRoom = generateRoomName();
+    var roomInfo = {
+        roomName : newRoom,
+        noOfUsers : 1,
+        userList : [userId]
+    }
+    friendRooms.push(roomInfo);
+    connectedUser[userId]["isInRoom"] = true;
+    console.log('Connected User: ',connectedUser);
+    socket.emit("onCreateRoom",roomInfo);  
+    socket.emit("onChallengeRequest",roomInfo);
+
+}
 SocketServices.prototype.removeUser = function(socket){
     socket.emit("leaveRoom");
     delete connectedUser[socket.userId];  
@@ -75,8 +88,8 @@ function addUserInConnectedUser(socket,userId){
     
 }
 
-function generateRoomName(){
-    var rooms = await _.unionBy(fullRooms,existingRooms,friendRooms);
+async function generateRoomName(){
+    var rooms = await _.union(fullRooms,existingRooms,friendRooms);
     if(_.find(rooms,{'roomName' : newRoom})){
         generateRoomName();
     }else{
@@ -114,8 +127,9 @@ function JoinRoom(userId,io){
     io.in(existingRooms[0].roomName).emit("onJoinRoom",existingRooms[0]);   
 }
 
+function sendRequest(friendId){
 
-
+}
 
 function shiftFromExistingToFullRoom(){
     if(existingRooms[0].noOfUsers == maxPlayersInRoom){
