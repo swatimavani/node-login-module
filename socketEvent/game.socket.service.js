@@ -75,8 +75,8 @@ function addUserInConnectedUser(socket,userId){
     
 }
 
-function generateRoomName(){
-    var rooms = await _.unionBy(fullRooms,existingRooms,friendRooms);
+async function generateRoomName(){
+    var rooms = await _.union(fullRooms,existingRooms,friendRooms);
     if(_.find(rooms,{'roomName' : newRoom})){
         generateRoomName();
     }else{
