@@ -5,10 +5,8 @@ const carrom = {
     userStatus:['offline','online','playing'],
     game:{
         "primaryCurrency":10,
-        "secondaryCurrency":100,
-        "allowSwitchingRoom" : true,
-		"maxPlayersInRoom" : 2,
-        "maxRooms" : 0,
+        "secondaryCurrency":100,       
+		"maxPlayersInRoom" : 2      
     }
 }
 
@@ -19,10 +17,8 @@ const test = {
     userStatus:['offline','online','playing'],
     game:{
         "primaryCurrency":10,
-        "secondaryCurrency":100,
-        "allowSwitchingRoom" : true,
-		"maxPlayersInRoom" : 2,
-        "maxRooms" : 0,
+        "secondaryCurrency":100,       
+		"maxPlayersInRoom" : 2       
     }   
 }
 

@@ -1,25 +1,24 @@
 const uuidv1 = require('uuid/v1');
 const _ = require('lodash');
+var userController = require('../controller/userController');
 module.exports = new SocketServices;
 
 function SocketServices() {   
 }
 
 const maxPlayersInRoom = config.game.maxPlayersInRoom;
-const maxRooms = config.game.maxRooms;
-const allowSwitchingRoom = config.game.allowSwitchingRoom;       
 
 var connectedUser = [];
 var existingRooms = [];
+var friendRooms = [];
 var fullRooms = [];
-var player = {};
-var playerRoom = {};
 
 SocketServices.prototype.addUser = async function(socket,data){   
     console.log("addUser ",data);
     var userId = data.userId?data.userId:"";   
     await addUserInConnectedUser(socket,userId);
-    console.log(" add connectedUser",connectedUser);
+    manageUserStatus(userId,'online');
+     
 }
 
 SocketServices.prototype.createOrJoin = function(socket,data,io){
@@ -43,26 +42,27 @@ SocketServices.prototype.createOrJoin = function(socket,data,io){
 }
 
 SocketServices.prototype.removeUser = function(socket){
-   socket.emit("leaveRoom");
-   delete connectedUser[socket.userId];  
-   console.log('ConnectedUser ',socket.userId);
-   console.log('ConnectedUser ',connectedUser);
-}
-
-SocketServices.prototype.leaveRoom = async function(socket){   
-    if(connectedUser[socket.userId]["isInRoom"]){
-        var rooms = await _.unionBy(fullRooms,existingRooms);   
-        var room = await _.find(rooms,function(o){
-            return _.includes(o.userList, socket.userId);
-        }); 
-        if(room){
-            socket.leave(room.roomName);
-            _.remove(room.userList,socket.userId);           
-            room.noOfUsers--;
-            connectedUser[socket.userId]["isInRoom"] = false;               
-        }       
-    }
-}
+    socket.emit("leaveRoom");
+    delete connectedUser[socket.userId];  
+    manageUserStatus(userId,'offline');   
+ }
+ 
+ SocketServices.prototype.leaveRoom = async function(socket){   
+     if(connectedUser[socket.userId]["isInRoom"]){
+         var rooms = await _.unionBy(fullRooms,existingRooms,friendRooms);   
+         var room = await _.find(rooms,function(o){
+             return _.includes(o.userList, socket.userId);
+         }); 
+         if(room){
+             socket.leave(room.roomName);
+             _.remove(room.userList,socket.userId);           
+             room.noOfUsers--;
+             connectedUser[socket.userId]["isInRoom"] = false;
+             connectedUser[socket.userId]["status"] = "online";  
+             userController.manageUserStatus(data.userId,'online');             
+         }       
+     }
+ }
 
 
 function addUserInConnectedUser(socket,userId){
@@ -70,23 +70,29 @@ function addUserInConnectedUser(socket,userId){
     if(!connectedUser[userId] ){
         connectedUser[userId] = new Array();
         connectedUser[userId]["socketId"] = socket.id;   
-        connectedUser[userId]["isInRoom"] = false;    
+        connectedUser[userId]["isInRoom"] = false;
     }
     
 }
 
-function removeUserFromConnectedUser(userId){
-    delete connectedUser[userId];       
-}
-
-function CreateRoom(socket,userId){   
-    console.log("Create room");
-    var newRoom = "room" + uuidv1();
-
-    if(_.find(existingRooms,{'roomName' : newRoom}) || _.find(fullRooms,{'roomName' : newRoom})){
-        CreateRoom(userId);
+function generateRoomName(){
+    var rooms = await _.unionBy(fullRooms,existingRooms,friendRooms);
+    if(_.find(rooms,{'roomName' : newRoom})){
+        generateRoomName();
+    }else{
+        var newRoom = "room" + uuidv1();
+        return newRoom;
     }
-    else{
+}
+async function CreateRoom(socket,userId){   
+    console.log("Create room");
+    // var newRoom = "room" + uuidv1();
+
+    // if(_.find(existingRooms,{'roomName' : newRoom}) || _.find(fullRooms,{'roomName' : newRoom})){
+    //     CreateRoom(userId);
+    // }
+    // else{
+        var newRoom = generateRoomName();
         var roomInfo = {
             roomName : newRoom,
             noOfUsers : 1,
@@ -96,7 +102,7 @@ function CreateRoom(socket,userId){
         connectedUser[userId]["isInRoom"] = true;
         console.log('Connected User: ',connectedUser);
         socket.emit("onCreateRoom",roomInfo);   
-    }
+    // }
 }
 
 function JoinRoom(userId,io){
@@ -105,9 +111,11 @@ function JoinRoom(userId,io){
     existingRooms[0].noOfUsers++;
     existingRooms[0].userList.push(userId);
     connectedUser[userId]["isInRoom"] = true;
-    
     io.in(existingRooms[0].roomName).emit("onJoinRoom",existingRooms[0]);   
 }
+
+
+
 
 function shiftFromExistingToFullRoom(){
     if(existingRooms[0].noOfUsers == maxPlayersInRoom){
@@ -120,5 +128,11 @@ function shiftFromExistingToFullRoom(){
     else{
         return;
     }
+}
+
+function manageUserStatus(userId,status){
+    userController.manageUserStatus(userId,status); 
+    if(connectedUser[userId])
+        connectedUser[userId]["status"] = "Online"; 
 }
 

@@ -47,3 +47,13 @@ async function removeUser(deviceId){
     }
     return true;
 }
+
+UserController.prototype.updateUser = async function(userId,data){
+    var user = await User.findOneAndUpdate({_id:userId},data,{new:true});
+    return res.send({status:true,message:"User updated successfully.",data:user});
+}
+
+UserController.prototype.manageUserStatus = async function(userId,status){
+    var user = await User.findOneAndUpdate({_id:userId},{status:status},{new:true});
+    return res.send({status:true,message:"User updated successfully.",data:user});
+}
