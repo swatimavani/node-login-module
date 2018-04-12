@@ -64,8 +64,7 @@ UserSchema.methods.toJSON = function(){
 UserSchema.methods.generateAuthToken = async function(deviceId){
     var user = this;
     var temp2;
-    temp2 = await Token.remove({userId:this._id,deviceId:deviceId}).exec();
-    console.log('temp ' , temp2);   
+    await Token.remove({userId:this._id,deviceId:deviceId}).exec();     
     var generatedToken = jwt.sign({_id:this._id.toHexString()},config.secret).toString();
     var token = new Token({userId:this._id,deviceId:deviceId,token:generatedToken});
     try{

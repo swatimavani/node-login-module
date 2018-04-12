@@ -5,6 +5,6 @@ var {gameData} = require('./gameData/socket.gameData');
 
 module.exports = new socketFriendRequestServices;
 
-function socketFriendRequestServices(){
+socketFriendRequestServices.prototype.sendRequest =  function(){
 
 }

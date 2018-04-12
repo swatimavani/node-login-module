@@ -71,7 +71,7 @@ UserController.prototype.updateUser = async function(userId,data){
 
 }
 
-UserController.prototype.manageUserStatus = async function(userId,status){
+UserController.prototype.manageUserStatus = async function(userId,status){    
     var user = await User.findOneAndUpdate({_id:userId},{status:status},{new:true});
     return user;
 }
