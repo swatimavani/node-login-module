@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({extended : true}));
 app.use(bodyParser.json());
 app.use('/user',routes);
 
-require('../socketEvent/game.socket')(io);
+require('../socketEvent/socket')(io);
 
 server.listen(config.PORT, () => {
     console.log("server on ",config.PORT);

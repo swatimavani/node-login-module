@@ -68,6 +68,7 @@ UserController.prototype.update = function(req,res){
 UserController.prototype.updateUser = async function(userId,data){
     var user = await User.update({_id:userId},data);      
     return user;
+
 }
 
 UserController.prototype.manageUserStatus = async function(userId,status){
