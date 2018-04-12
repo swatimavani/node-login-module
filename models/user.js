@@ -58,18 +58,21 @@ var UserSchema = Schema({
 UserSchema.methods.toJSON = function(){
 	var user = this;
 	var userObject = user.toObject();
-	return _.pick(userObject,['_id','username','profileLink','primaryCurrency','secondaryCurrency',"data"]);
+	return _.pick(userObject,['_id','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
 };
 
 UserSchema.methods.generateAuthToken = async function(deviceId){
     var user = this;
+    var temp2;
+    temp2 = await Token.remove({userId:this._id,deviceId:deviceId}).exec();
+    console.log('temp ' , temp2);   
     var generatedToken = jwt.sign({_id:this._id.toHexString()},config.secret).toString();
     var token = new Token({userId:this._id,deviceId:deviceId,token:generatedToken});
     try{
         var token = await token.save();
         return token.token;
-    }catch(e){       
-        return e; 
+    }catch(e){  
+        return null; 
     }
 };
 
@@ -101,14 +104,16 @@ TokenSchema.statics.findByToken = async function(token){
 	var Token = this;
 	var decoded;
 	try{
-        decoded = jwt.verify(token,config.secret);             
+        decoded = jwt.verify(token,config.secret);       
+        console.log('decoded: ',decoded);
         var token = await Token.findOne({
                 userId:decoded._id,
                 token:token
-            }).populate('userId').exec();           
+            }).populate('userId');           
+        console.log('token:', token.userId);
         return token.userId;
 	}catch(e){
-		return (e);
+		return null;
 	}
 	
 }

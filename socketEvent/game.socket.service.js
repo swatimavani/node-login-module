@@ -21,8 +21,7 @@ SocketServices.prototype.addUser = async function(socket,data){
      
 }
 
-SocketServices.prototype.createOrJoin = function(socket,data,io){
-    // console.log("create Or Join ", data);
+SocketServices.prototype.createOrJoin = function(socket,data,io){   
     console.log('user id ' + socket.userId);
     if(!connectedUser[socket.userId]["isInRoom"]){
         if(existingRooms.length == 0){
@@ -57,7 +56,7 @@ SocketServices.prototype.generateRequest = function(socket,data){
 SocketServices.prototype.removeUser = function(socket){
     socket.emit("leaveRoom");
     delete connectedUser[socket.userId];  
-    manageUserStatus(userId,'offline');   
+    manageUserStatus(socket.userId,'offline');   
  }
  
  SocketServices.prototype.leaveRoom = async function(socket){   
@@ -72,7 +71,7 @@ SocketServices.prototype.removeUser = function(socket){
              room.noOfUsers--;
              connectedUser[socket.userId]["isInRoom"] = false;
              connectedUser[socket.userId]["status"] = "online";  
-             userController.manageUserStatus(data.userId,'online');             
+             userController.manageUserStatus(socket.userId,'online');             
          }       
      }
  }
@@ -147,6 +146,6 @@ function shiftFromExistingToFullRoom(){
 function manageUserStatus(userId,status){
     userController.manageUserStatus(userId,status); 
     if(connectedUser[userId])
-        connectedUser[userId]["status"] = "Online"; 
+        connectedUser[userId]["status"] = "online"; 
 }
 

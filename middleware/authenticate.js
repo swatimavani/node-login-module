@@ -1,15 +1,17 @@
-var {User} = require('./../models/user');
-var {Token} = require('./../models/user');
+var {User,Token} = require('./../models/user');
+const {setSuccessResponse,setErrorResponse} = require('../utility/common');
 
 var authenticate = async (req,res,next) => {
 	var token = req.header('x-auth');
-	var token = await Token.findByToken(token);
+    var token = await Token.findByToken(token);
 	if(token){
         req.user = token;
-        req.token = token;	
+        req.token = token;
+        // console.log(req.user);	
         next();
     }else{
-        res.status(401).send();
+        var response = setErrorResponse('User unauthenticated');
+        return res.status(401).send(response);
     }
 		
 };

@@ -6,17 +6,18 @@ var responseObj = {
     },
     data : {}
 };
-var setResponse = (reqObj) =>{
-    if(reqObj){
-        responseObj.response.status = true;
-        responseObj.response.message = "success";
-        responseObj.data.id = reqObj._id;
-        responseObj.data.username = reqObj.username;
-        responseObj.data.primaryCurrency = reqObj.primaryCurrency;
-        responseObj.data.secondaryCurrency = reqObj.secondaryCurrency;
-        responseObj.data.data = reqObj.data;
-    }
+var setSuccessResponse = (message,data) =>{   
+    responseObj.response.status = true;
+    responseObj.response.message = message;
+    responseObj.data = data?data:{};   
     return responseObj;
 }
 
-module.exports = {setResponse}
+var setErrorResponse = (message) =>{   
+    responseObj.response.status = false;
+    responseObj.response.message = message;
+    responseObj.data = {};   
+    return responseObj;
+}
+
+module.exports = {setSuccessResponse,setErrorResponse}
