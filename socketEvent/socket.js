@@ -1,5 +1,5 @@
 //require socket on services
-var services = require('./game.socket.service');
+var services = require('./socket.service');
 
 module.exports = (io) => {   
     //Enable cross domain access from evry wahere
