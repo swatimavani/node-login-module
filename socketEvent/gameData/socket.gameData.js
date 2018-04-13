@@ -9,7 +9,8 @@ var gameData = {
     
 }
 
-function generateRoomName(){
+var generateRoomName = function(){
+    console.log(gameData.existingRooms);
     var rooms =  _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms);
     if(_.find(rooms,{'roomName' : newRoom})){
         generateRoomName();
@@ -18,7 +19,4 @@ function generateRoomName(){
         return newRoom;
     }
 }
-var roomName = async function(){
-    return await generateRoomName();
-}
-module.exports = {gameData,roomName}
+module.exports = {gameData,generateRoomName}

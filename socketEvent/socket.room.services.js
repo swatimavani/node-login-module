@@ -1,6 +1,6 @@
-
 const _ = require('lodash');
-var {gameData} = require('./gameData/socket.gameData');
+var {gameData,generateRoomName} = require('./gameData/socket.gameData');
+const {setSuccessResponse,setErrorResponse} = require('../utility/common');
 
 module.exports = new socketRoomServices;
 
@@ -9,29 +9,22 @@ function socketRoomServices(){
 }
 
 socketRoomServices.prototype.createOrJoin = async function(socket,gameData,io){
-
-    console.log('user id ' + socket.userId);
-    if(!gameData.connectedUser[socket.userId]["isInRoom"]){
-        console.log('existingRooms ' + gameData.existingRooms.length);
-        
+    console.log('Create or Join: user id -' + socket.userId);
+    if(gameData.connectedUser[socket.userId] && !gameData.connectedUser[socket.userId]["isInRoom"]){
         if(gameData.existingRooms.length == 0){
             await CreateRoom(socket,socket.userId);
-       
         }else{
             JoinRoom(socket.userId,io);
-
         }
-        console.log('existing room',gameData.existingRooms[0]);
         socket.join(gameData.existingRooms[0].roomName);
         shiftFromExistingToFullRoom();
     }
     else{
-        console.log(socket.userId + " is already in room");
-        
+        socket.emit('OnFailRoomCreate',setErrorResponse('Fail to create room.')) 
     }    
 }
 socketRoomServices.prototype.leaveRoom = async function(socket,gameData){
-    if(connectedUser[socket.userId]["isInRoom"]){
+    if(connectedUser[socket.userId] && connectedUser[socket.userId]["isInRoom"]){
         var rooms = await _.union(fullRooms,existingRooms,friendRooms);   
         var room = await _.find(rooms,function(o){
             return _.includes(o.userList, socket.userId);
@@ -42,17 +35,18 @@ socketRoomServices.prototype.leaveRoom = async function(socket,gameData){
             room.noOfUsers--;
             connectedUser[socket.userId]["isInRoom"] = false;
             connectedUser[socket.userId]["status"] = "online";  
-            return true;            
-        }   
-        return false;    
+            socket.emit('OnLeaveRoom',setSuccessResponse('Leave room successfully.'));         
+            return true;
+        }
+        socket.emit('OnLeaveRoom',setErrorResponse('Room does not exist.'));
+        return;
     }
-    return false;
+    socket.emit('OnLeaveRoom',setErrorResponse('user not connected.'));
 }
 
 function CreateRoom(socket,userId){   
     console.log("Create room");  
-    var newRoom =  gameData.roomName;
-    console.log('gamedata',gameData);
+    var newRoom =  generateRoomName();
     var roomInfo = {
         roomName : newRoom,
         noOfUsers : 1,
@@ -60,32 +54,24 @@ function CreateRoom(socket,userId){
     }
     gameData.existingRooms.push(roomInfo);
     gameData.connectedUser[socket.userId]["isInRoom"] = true;
-    socket.emit("onCreateRoom",roomInfo);      
+    socket.emit("onCreateRoom",setSuccessResponse("Room created successfully.",roomInfo));      
 }
 
 function JoinRoom(userId,io){
     console.log("Join room"); 
-    gameData.existingRooms[0].noOfUsers++;
-    gameData.existingRooms[0].userList.push(userId);
-    gameData.connectedUser[userId]["isInRoom"] = true;
-    io.in(gameData.existingRooms[0].roomName).emit("onJoinRoom",gameData.existingRooms[0]);   
+    if(gameData.existingRooms.length > 0){
+        gameData.existingRooms[0].noOfUsers++;
+        gameData.existingRooms[0].userList.push(userId);
+        gameData.connectedUser[userId]["isInRoom"] = true;
+        io.in(gameData.existingRooms[0].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',gameData.existingRooms[0]));   
+    }else{
+        socket.emit('OnFailJoinRoom',setErrorResponse('Room does not exist.'));
+    }
+    
 }
-//  function generateRoomName(){
-//     var rooms =  _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms);
-//     if(_.find(rooms,{'roomName' : newRoom})){
-//         generateRoomName();
-//     }else{
-//         var newRoom = "room" + uuidv1();
-//         return newRoom;
-//     }
-// }
-
 function shiftFromExistingToFullRoom(){
     if(gameData.existingRooms[0].noOfUsers == gameData.maxPlayersInRoom){
         var firstRoom = gameData.existingRooms.shift();
-        console.log("leangth  " + gameData.existingRooms.length);
-        
-        console.log("first room ", firstRoom);
         gameData.fullRooms.push(firstRoom);
     }
     else{
