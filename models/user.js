@@ -58,7 +58,7 @@ var UserSchema = Schema({
 UserSchema.methods.toJSON = function(){
 	var user = this;
 	var userObject = user.toObject();
-	return _.pick(userObject,['_id','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
+	return _.pick(userObject,['_id','facebookId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
 };
 
 UserSchema.methods.generateAuthToken = async function(deviceId){
@@ -103,13 +103,11 @@ TokenSchema.statics.findByToken = async function(token){
 	var Token = this;
 	var decoded;
 	try{
-        decoded = jwt.verify(token,config.secret);       
-        console.log('decoded: ',decoded);
+        decoded = jwt.verify(token,config.secret);              
         var token = await Token.findOne({
                 userId:decoded._id,
                 token:token
-            }).populate('userId');           
-        console.log('token:', token.userId);
+            }).populate('userId');       
         return token.userId;
 	}catch(e){
 		return null;
