@@ -7,6 +7,7 @@ var {authenticate} = require('../middleware/authenticate');
 router.post('/login', userController.login);
 router.get('/details', authenticate, userController.details);
 router.post('/update', authenticate, userController.update);
+router.post('/friends',  authenticate, userController.getAllFriends)
 
 
 

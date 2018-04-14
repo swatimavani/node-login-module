@@ -75,3 +75,13 @@ UserController.prototype.manageUserStatus = async function(userId,status){
     var user = await User.findOneAndUpdate({_id:userId},{status:status},{new:true});
     return user;
 }
+
+UserController.prototype.getAllFriends = async function(req,res){
+    var friendIds = req.body.friendIds?req.body.friendIds:[];
+    var users = await User.find({facebookId:{$in: friendIds}});
+    if(users)
+        this.response = setSuccessResponse("Retrieved all friends.",users); 
+    else
+        this.response = setSuccessResponse("No friends found"); 
+    res.send(this.response);
+}
