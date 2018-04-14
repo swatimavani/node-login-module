@@ -1,7 +1,8 @@
 const uuidv1 = require('uuid/v1');
 const _ = require('lodash');
 var {gameData,generateRoomName} = require('./gameData/socket.gameData');
-const {setSuccessResponse,setErrorResponse} = require('../utility/common');
+const {setSuccessResponse,setErrorResponse,setPlayerData,setRoomInfo} = require('../utility/common');
+const constant = require('../config/constant.conf');
 
 module.exports = new socketFriendRequestServices;
 function socketFriendRequestServices(){
@@ -10,18 +11,22 @@ function socketFriendRequestServices(){
 
 socketFriendRequestServices.prototype.createRoom =  function(socket,data){
     if(gameData.connectedUser[socket.userId] && !gameData.connectedUser[socket.userId]["isInRoom"]){
+        
         var newRoom =  generateRoomName();
-        var roomInfo = {
-            roomName : newRoom,
-            noOfUsers : 1,
-            maxPlayer : data.roomSize,
-            userList : [socket.userId]
-        }
+        data.roomName = newRoom;
+        data.roomStatus = constant.roomStatus.FRIEND_ROOM;
+        data.userId = socket.userId;
+        
+        var roomInfo = setRoomInfo(data);
+        
         gameData.friendRooms.push(roomInfo);
         gameData.connectedUser[socket.userId]["isInRoom"] = true;
+        
         console.log(gameData.friendRooms);
+        
         socket.join(roomInfo.roomName);
         socket.emit("onCreateFriendRoom",setSuccessResponse("Room created successfully.",roomInfo));
+    
     }else{
         socket.emit('onFailRoomCreate',setErrorResponse('Fail to create room.'));
     }
@@ -32,7 +37,7 @@ socketFriendRequestServices.prototype.sendRequest = function(socket,data){
 
         if(gameData.connectedUser[data.friendUserId]["status"] == "online" && !gameData.connectedUser[data.friendUserId]["isInRoom"]){
             var index = getPlayerRoomIndex(data.roomName);
-            socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",gameData.friendRooms[index]));
+            socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.roomName,data)));
         
         }
         else{
@@ -55,10 +60,15 @@ socketFriendRequestServices.prototype.manageRequest = async function(socket,data
             
             return;
         }
-        gameData.friendRooms[index].userList.push(socket.userId);
+        var user = {};
+        user.userId = socket.userId;
+        user.userName = data.userName;
+        user.profileLink = data.profileLink;
+
+        gameData.friendRooms[index].userList.push(user);
         gameData.friendRooms[index].noOfUsers++;
         socket.join(data.roomName);
-        io.in(data.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',gameData.friendRooms[index]));   
+        io.in(data.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,data.roomName,data)));   
         var isPlayersReadyToPlay = shiftFromFriendToFullRoom(index);
         if(isPlayersReadyToPlay){
             io.in(data.roomName).emit("onGameStart",setSuccessResponse('Can play',gameData.friendRooms[index]));   
@@ -71,8 +81,9 @@ socketFriendRequestServices.prototype.manageRequest = async function(socket,data
 }
 
 function shiftFromFriendToFullRoom(index){
-    if(gameData.friendRooms[index].noOfUsers == gameData.friendRooms[index].maxPlayer){
+    if(gameData.friendRooms[index].noOfUsers == gameData.friendRooms[index].roomSize){
         var firstRoom = _.pullAt(gameData.friendRooms,[index]);
+        firstRoom.roomStatus = constant.roomStatus.FULL_ROOM;
         gameData.fullRooms.push(firstRoom);
         return true;
     }

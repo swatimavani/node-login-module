@@ -2,6 +2,7 @@ var userController = require('../controller/userController');
 var roomServices = require('./socket.room.services');
 var friendRequestServices = require('./socket.friendsRequest.service');
 var {gameData} = require('./gameData/socket.gameData');
+const {setSuccessResponse,setErrorResponse} = require('../utility/common');
 module.exports = new SocketServices;
 
 function SocketServices() {   
@@ -54,11 +55,17 @@ function addUserInConnectedUser(socket,userId){
         gameData.connectedUser[userId]["socketId"] = socket.id;   
         gameData.connectedUser[userId]["isInRoom"] = false;
     }
+    else{
+        socket.emit("errorEvent",setErrorResponse("Player is already added"));
+    }
     
 }
 async function manageUserStatus(userId,status){   
     await userController.manageUserStatus(userId,status); 
     if(gameData.connectedUser[userId])
         gameData.connectedUser[userId]["status"] = status; 
+    else
+        socket.emit("errorEvent",setErrorResponse("Somthing went wrong"));
+        
 }
 

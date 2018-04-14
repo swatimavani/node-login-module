@@ -1,3 +1,11 @@
+const roomStatus = {
+
+    EXISTING_ROOM : 1,
+    FULL_ROOM : 2,
+    FRIEND_ROOM : 3
+
+}
+
 const carrom = {
     PORT:3001,
     database:"carrom",
@@ -22,4 +30,4 @@ const test = {
     }   
 }
 
-module.exports = {carrom,test};
+module.exports = {carrom,test,roomStatus};
