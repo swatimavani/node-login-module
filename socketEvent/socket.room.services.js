@@ -8,7 +8,7 @@ function socketRoomServices(){
 
 }
 
-socketRoomServices.prototype.createOrJoin = async function(socket,gameData,io){
+socketRoomServices.prototype.createOrJoin = async function(socket,io){
     console.log('Create or Join: user id -' + socket.userId);
     if(gameData.connectedUser[socket.userId] && !gameData.connectedUser[socket.userId]["isInRoom"]){
         if(gameData.existingRooms.length == 0){
@@ -20,7 +20,7 @@ socketRoomServices.prototype.createOrJoin = async function(socket,gameData,io){
         shiftFromExistingToFullRoom();
     }
     else{
-        socket.emit('OnFailRoomCreate',setErrorResponse('Fail to create room.')) 
+        socket.emit('OnFailRoomCreate',setErrorResponse('Fail to create room.'));
     }    
 }
 socketRoomServices.prototype.leaveRoom = async function(socket,gameData){

@@ -18,5 +18,6 @@ var generateRoomName = function(){
         var newRoom = "room" + uuidv1();
         return newRoom;
     }
+    
 }
 module.exports = {gameData,generateRoomName}
