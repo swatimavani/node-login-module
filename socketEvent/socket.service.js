@@ -22,11 +22,19 @@ SocketServices.prototype.createOrJoin = function(socket,data,io){
     roomServices.createOrJoin(socket,data,io);
 }
 
-SocketServices.prototype.removeUser = function(socket){
+SocketServices.prototype.removeUser = async function(socket){
+    console.log("connected userc before : ", gameData.connectedUser);
     socket.emit("leaveRoom");
+    
     if(gameData.connectedUser[socket.userId]){
+
         delete gameData.connectedUser[socket.userId];  
-        manageUserStatus(socket.userId,config.userStatus[0]); 
+        console.log("connected user : ", gameData.connectedUser);
+        
+        await userController.manageUserStatus(socket.userId,config.userStatus[0]); 
+       
+        if(gameData.connectedUser[socket.userId])
+            gameData.connectedUser[socket.userId]["status"] = config.userStatus[0]; 
     }
  }
  

@@ -6,12 +6,8 @@ var responseObj = {
     },
     data : {}
 };
-var playerData = {
-    
-}
-var roomInfo = {
-    
-}
+
+
 var setSuccessResponse = (message,data) =>{   
     responseObj.response.status = true;
     responseObj.response.message = message;
@@ -27,6 +23,7 @@ var setErrorResponse = (message) =>{
 }
 
 var setPlayerData = (userId,room) => {
+    var playerData = {};
     playerData.playerId = userId;
     playerData.roomName = room.roomName;
     // playerData.userName = room.userName;
@@ -34,6 +31,7 @@ var setPlayerData = (userId,room) => {
     return playerData;
 }
 var setRoomInfo = (roomData) => {
+    var roomInfo = {};
     roomInfo.roomName = roomData.roomName;
     roomInfo.noOfUsers = 1;
     roomInfo.roomSize = roomData.roomSize;
@@ -47,7 +45,7 @@ var setRoomInfo = (roomData) => {
     return roomInfo;
     
 }
-var joinUserInRoom = (rooms,roomIndex,user) => {
+var joinUserInRoom = (rooms,roomIndex,data) => {
     var user = {};
     user.userId = data.userId;
     user.userName = data.userName;

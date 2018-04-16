@@ -11,11 +11,11 @@ var gameData = {
 
 var generateRoomName = function(){
     console.log(gameData.existingRooms);
+    var newRoom = "room" + uuidv1();
     var rooms =  _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms);
     if(_.find(rooms,{'roomName' : newRoom})){
         generateRoomName();
     }else{
-        var newRoom = "room" + uuidv1();
         return newRoom;
     }
     

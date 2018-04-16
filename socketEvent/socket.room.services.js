@@ -1,5 +1,5 @@
 const _ = require('lodash');
-var {gameData,generateRoomName,joinUserInRoom} = require('./gameData/socket.gameData');
+var {gameData,generateRoomName} = require('./gameData/socket.gameData');
 const { setSuccessResponse,
         setErrorResponse,
         setPlayerData,
@@ -28,9 +28,10 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
         socket.emit('onFailRoomCreate',setErrorResponse('Fail to create room.'));
     }    
 }
-socketRoomServices.prototype.leaveRoom = async function(socket,gameData){
+socketRoomServices.prototype.leaveRoom = async function(socket){
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId]["isInRoom"]){
-        var rooms = await _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms); 
+        // var rooms = await _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms); 
+        var rooms = gameData.fullRooms.concat(gameData.existingRooms).concat(gameData.friendRooms);
         console.log("rooms" , JSON.stringify(rooms));
           
         var room = _.find(rooms, function(o) {
@@ -69,6 +70,9 @@ function CreateRoom(socket,data){
     data.userId = socket.userId;
     var roomInfo = setRoomInfo(data);
     gameData.existingRooms.push(roomInfo);
+
+    console.log("existing room : ", gameData.existingRooms);
+    
     gameData.connectedUser[socket.userId]["isInRoom"] = true;
     socket.join(data.roomName);
     console.log("onCreateRoom",setSuccessResponse("Room created successfully.",roomInfo));
@@ -77,24 +81,38 @@ function CreateRoom(socket,data){
 }
 
 function JoinRoom(socket,data,io){
-    console.log("Join room"); 
+    console.log("Join room : ",gameData.existingRooms.length ); 
 
-    for(var i = 0; i < gameData.existingRooms.length; i++){
-        if(gameData.existingRooms[i].roomSize == data.roomSize){
-            data.userId = socket.userId;
-            joinUserInRoom(gameData.existingRooms,i,data);
-            gameData.connectedUser[socket.userId]["isInRoom"] = true;
+    var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.roomSize});
+    if(existingRoomIndex >= 0){
+        data.userId = socket.userId;
+        joinUserInRoom(gameData.existingRooms,existingRoomIndex,data);
+        gameData.connectedUser[socket.userId]["isInRoom"] = true;
 
-            socket.join(gameData.existingRooms[i].roomName);
-            console.log("onJoinRoom",gameData.existingRooms[i]);
-            
-            io.in(gameData.existingRooms[i].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,gameData.existingRooms[i].roomName,data))); 
-            shiftFromExistingToFullRoom(i);
-            return;  
-        }
+        socket.join(gameData.existingRooms[existingRoomIndex].roomName);
+        console.log("onJoinRoom",gameData.existingRooms[existingRoomIndex]);
+        
+        io.in(gameData.existingRooms[existingRoomIndex].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,gameData.existingRooms[existingRoomIndex].roomName,data))); 
+        shiftFromExistingToFullRoom(existingRoomIndex);
+    }else{
+        CreateRoom(socket,data);
     }
-    CreateRoom(socket,data);
-    socket.emit('onFailJoinRoom',setErrorResponse('Room does not exist.'));
+    // for(var i = 0; i < gameData.existingRooms.length; i++){
+    //     if(gameData.existingRooms[i].roomSize == data.roomSize){
+    //         data.userId = socket.userId;
+    //         joinUserInRoom(gameData.existingRooms,i,data);
+    //         gameData.connectedUser[socket.userId]["isInRoom"] = true;
+
+    //         socket.join(gameData.existingRooms[i].roomName);
+    //         console.log("onJoinRoom",gameData.existingRooms[i]);
+            
+    //         io.in(gameData.existingRooms[i].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,gameData.existingRooms[i].roomName,data))); 
+    //         shiftFromExistingToFullRoom(i);
+    //         return;  
+    //     }
+    // }
+   
+    //socket.emit('onFailJoinRoom',setErrorResponse('Room does not exist.'));
     
     
 }
