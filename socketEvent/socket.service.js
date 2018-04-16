@@ -14,11 +14,12 @@ SocketServices.prototype.addUser = async function(socket,data){
     var userId = data.userId?data.userId:"";  
     await addUserInConnectedUser(socket,userId);
     await manageUserStatus(userId,config.userStatus[1]);
+
 }
 
-SocketServices.prototype.createOrJoin = function(socket,io){
+SocketServices.prototype.createOrJoin = function(socket,data,io){
     // console.log("create Or Join ", data);
-    roomServices.createOrJoin(socket,io);
+    roomServices.createOrJoin(socket,data,io);
 }
 
 SocketServices.prototype.removeUser = function(socket){
@@ -54,6 +55,8 @@ function addUserInConnectedUser(socket,userId){
         gameData.connectedUser[userId] = new Array();
         gameData.connectedUser[userId]["socketId"] = socket.id;   
         gameData.connectedUser[userId]["isInRoom"] = false;
+        socket.emit("onAddUser",setSuccessResponse("Player is added"));
+        
     }
     else{
         socket.emit("errorEvent",setErrorResponse("Player is already added"));

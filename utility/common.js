@@ -26,12 +26,11 @@ var setErrorResponse = (message) =>{
     return responseObj;
 }
 
-var setPlayerData = (userId,roomName,data) => {
+var setPlayerData = (userId,room) => {
     playerData.playerId = userId;
-    playerData.roomName = roomName;
-    playerData.userName = data.userName;
-    playerData.profileLink = data.profileLink;
-    
+    playerData.roomName = room.roomName;
+    // playerData.userName = room.userName;
+    // playerData.profileLink = room.profileLink;
     return playerData;
 }
 var setRoomInfo = (roomData) => {
@@ -43,8 +42,17 @@ var setRoomInfo = (roomData) => {
     user.userId = roomData.userId;
     user.userName = roomData.userName;
     user.profileLink = roomData.profileLink;
+    roomInfo.userList = [];
     roomInfo.userList.push(user);
     return roomInfo;
     
 }
-module.exports = {setSuccessResponse,setErrorResponse,setPlayerData,setRoomInfo}
+var joinUserInRoom = (rooms,roomIndex,user) => {
+    var user = {};
+    user.userId = data.userId;
+    user.userName = data.userName;
+    user.profileLink = data.profileLink;
+    rooms[roomIndex].noOfUsers++;
+    rooms[roomIndex].userList.push(user);
+} 
+module.exports = {setSuccessResponse,setErrorResponse,setPlayerData,setRoomInfo,joinUserInRoom}

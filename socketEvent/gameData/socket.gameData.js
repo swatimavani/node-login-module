@@ -20,4 +20,5 @@ var generateRoomName = function(){
     }
     
 }
+
 module.exports = {gameData,generateRoomName}
