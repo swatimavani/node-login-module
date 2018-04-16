@@ -16,8 +16,8 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
         }else{
             JoinRoom(socket,data,io);
         }
-        socket.join(gameData.existingRooms[0].roomName);
-        shiftFromExistingToFullRoom();
+        
+     
     }
     else{
         socket.emit('OnFailRoomCreate',setErrorResponse('Fail to create room.'));
@@ -56,6 +56,7 @@ function CreateRoom(socket,data){
     var roomInfo = setRoomInfo(data);
     gameData.existingRooms.push(roomInfo);
     gameData.connectedUser[socket.userId]["isInRoom"] = true;
+    socket.join(data.roomName);
     socket.emit("onCreateRoom",setSuccessResponse("Room created successfully.",roomInfo));      
 }
 
@@ -68,10 +69,13 @@ function JoinRoom(socket,data,io){
             user.userId = socket.userId;
             user.userName = data.userName;
             user.profileLink = data.profileLink;
-            gameData.existingRooms[0].noOfUsers++;
-            gameData.existingRooms[0].userList.push(user);
+            gameData.existingRooms[i].noOfUsers++;
+            gameData.existingRooms[i].userList.push(user);
             gameData.connectedUser[userId]["isInRoom"] = true;
+            socket.join(gameData.existingRooms[i].roomName);
+            
             io.in(gameData.existingRooms[0].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,gameData.existingRooms[i].roomName,data))); 
+            shiftFromExistingToFullRoom(i);
             return;  
         }
     }
@@ -80,9 +84,9 @@ function JoinRoom(socket,data,io){
     
     
 }
-function shiftFromExistingToFullRoom(){
-    if(gameData.existingRooms[0].noOfUsers == gameData.existingRooms[0].roomSize){
-        var firstRoom = gameData.existingRooms.shift();
+function shiftFromExistingToFullRoom(index){
+    if(gameData.existingRooms[index].noOfUsers == gameData.existingRooms[index].roomSize){
+        var firstRoom =_.pullAt(gameData.existingRooms,[index]);
         firstRoom.roomStatus = constant.roomStatus.FULL_ROOM;
         gameData.fullRooms.push(firstRoom);
     }

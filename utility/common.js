@@ -7,15 +7,10 @@ var responseObj = {
     data : {}
 };
 var playerData = {
-    playerId,
-    roomName
+    
 }
 var roomInfo = {
-    roomName,
-    noOfUsers,
-    maxPlayer,
-    roomStatus,
-    userList : []
+    
 }
 var setSuccessResponse = (message,data) =>{   
     responseObj.response.status = true;
