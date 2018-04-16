@@ -13,7 +13,7 @@ SocketServices.prototype.addUser = async function(socket,data){
     console.log("connected user ", socket.id);  
     var userId = data.userId?data.userId:"";  
     await addUserInConnectedUser(socket,userId);
-    await manageUserStatus(userId,'online');
+    await manageUserStatus(userId,config.userStatus[1]);
 }
 
 SocketServices.prototype.createOrJoin = function(socket,io){
@@ -25,14 +25,14 @@ SocketServices.prototype.removeUser = function(socket){
     socket.emit("leaveRoom");
     if(gameData.connectedUser[socket.userId]){
         delete gameData.connectedUser[socket.userId];  
-        manageUserStatus(socket.userId,'offline'); 
+        manageUserStatus(socket.userId,config.userStatus[0]); 
     }
  }
  
  SocketServices.prototype.leaveRoom = async function(socket){   
     var leave = roomServices.leaveRoom(socket,gameData);
     if(leave){
-        userController.manageUserStatus(socket.userId,'online');
+        userController.manageUserStatus(socket.userId,config.userStatus[1]);
     }
  }
 

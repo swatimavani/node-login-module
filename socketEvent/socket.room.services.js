@@ -90,8 +90,8 @@ function shiftFromExistingToFullRoom(){
         return;
     }
 }
-function removePlayerFromRoom(roomArray,uId){
-    var index = _.findIndex(roomArray, function(roomObj) {
+function removePlayerFromRoom(rooms,uId){
+    var roomIndex = _.findIndex(rooms, function(roomObj) {
         var usersInRoom = _.find(roomObj.userList, {userId : uId});
         if(usersInRoom){
             return roomObj;
@@ -99,10 +99,10 @@ function removePlayerFromRoom(roomArray,uId){
     });
    
     socket.leave(room.roomName);
-    _.remove(roomArray[index].userList,socket.userId);           
-    roomArray[index].noOfUsers--;
+    _.remove(rooms[roomIndex].userList,socket.userId);           
+    rooms[roomIndex].noOfUsers--;
     connectedUser[socket.userId]["isInRoom"] = false;
-    connectedUser[socket.userId]["status"] = "online";  
+    connectedUser[socket.userId]["status"] = config.userStatus[1];  
     socket.emit('OnLeaveRoom',setSuccessResponse('Leave room successfully.'));     
-    socket.to(roomArray[index].roomName).emit("onOpponentLeaveRoom",setPlayerData(socket.userId,room.roomName));
+    socket.to(rooms[roomIndex].roomName).emit("onOpponentLeaveRoom",setPlayerData(socket.userId,room.roomName));
 }

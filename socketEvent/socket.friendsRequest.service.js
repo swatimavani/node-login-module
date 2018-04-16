@@ -35,7 +35,7 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
 socketFriendRequestServices.prototype.sendRequest = function(socket,data){
     if(gameData.connectedUser[socket.userId]["isInRoom"]){
 
-        if(gameData.connectedUser[data.friendUserId]["status"] == "online" && !gameData.connectedUser[data.friendUserId]["isInRoom"]){
+        if(gameData.connectedUser[data.friendUserId]["status"] == config.userStatus[1] && !gameData.connectedUser[data.friendUserId]["isInRoom"]){
             var index = getPlayerRoomIndex(data.roomName);
             socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.roomName,data)));
         
