@@ -1,7 +1,7 @@
 const uuidv1 = require('uuid/v1');
 const _ = require('lodash');
 var {gameData,generateRoomName} = require('./gameData/socket.gameData');
-const {setSuccessResponse,setErrorResponse,setPlayerData,setRoomInfo} = require('../utility/common');
+const {setSuccessResponse,setErrorResponse,setPlayerData,setRoomInfo,joinUserInRoom} = require('../utility/common');
 const constant = require('../config/constant.conf');
 
 module.exports = new socketFriendRequestServices;
@@ -60,13 +60,9 @@ socketFriendRequestServices.prototype.manageRequest = async function(socket,data
             
             return;
         }
-        var user = {};
-        user.userId = socket.userId;
-        user.userName = data.userName;
-        user.profileLink = data.profileLink;
+       data.userId = socket.userId;
 
-        gameData.friendRooms[index].userList.push(user);
-        gameData.friendRooms[index].noOfUsers++;
+        joinUserInRoom(gameData.friendRooms,index,data);
         socket.join(data.roomName);
         io.in(data.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,data.roomName,data)));   
         var isPlayersReadyToPlay = shiftFromFriendToFullRoom(index);

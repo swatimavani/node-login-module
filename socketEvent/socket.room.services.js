@@ -31,6 +31,8 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
 socketRoomServices.prototype.leaveRoom = async function(socket){
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId]["isInRoom"]){
         // var rooms = await _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms); 
+        console.log(" e rooms" , JSON.stringify(gameData.fullRooms));
+        
         var rooms = gameData.fullRooms.concat(gameData.existingRooms).concat(gameData.friendRooms);
         console.log("rooms" , JSON.stringify(rooms));
           
@@ -119,8 +121,14 @@ function JoinRoom(socket,data,io){
 function shiftFromExistingToFullRoom(index){
     if(gameData.existingRooms[index].noOfUsers == gameData.existingRooms[index].roomSize){
         var firstRoom =_.pullAt(gameData.existingRooms,[index]);
-        firstRoom.roomStatus = constant.roomStatus.FULL_ROOM;
-        gameData.fullRooms.push(firstRoom);
+        firstRoom[0].roomStatus = constant.roomStatus.FULL_ROOM;
+        gameData.fullRooms.push(firstRoom[0]);
+        
+        
+        console.log("shiftFromExistingToFullRoom first room : ", firstRoom );
+        
+        console.log("shiftFromExistingToFullRoom : ", gameData.fullRooms );
+        
     }
     else{
         return;
@@ -133,7 +141,7 @@ function removePlayerFromRoom(socket,rooms){
             return room;
         }
     });
-   
+   console.log("removePlayerFromRoom : ",roomIndex);
     socket.leave(rooms[roomIndex].roomName);
     var removedUser = removeUserFromRoom(rooms[roomIndex],socket.userId);
         
