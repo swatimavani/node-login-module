@@ -58,7 +58,9 @@ var UserSchema = Schema({
 UserSchema.methods.toJSON = function(){
 	var user = this;
 	var userObject = user.toObject();
-	return _.pick(userObject,['_id','facebookId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
+    var user = _.pick(userObject,['_id','facebookId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
+    user.userId = user._id;   
+    return user;
 };
 
 UserSchema.methods.generateAuthToken = async function(deviceId){

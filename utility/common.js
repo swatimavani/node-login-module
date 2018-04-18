@@ -32,24 +32,21 @@ var setPlayerData = (userId,room) => {
 }
 var setRoomInfo = (roomData) => {
     var roomInfo = {};
+    roomInfo.userList = [];
     roomInfo.roomName = roomData.roomName;
     roomInfo.noOfUsers = 1;
     roomInfo.roomSize = roomData.roomSize;
-    roomInfo.roomStatus = roomData.roomStatus;
-    var user = {};
-    user.userId = roomData.userId;
-    user.userName = roomData.userName;
-    user.profileLink = roomData.profileLink;
-    roomInfo.userList = [];
-    roomInfo.userList.push(user);
+    roomInfo.roomStatus = roomData.roomStatus;  
+
+    roomInfo.userList.push(roomData.user);
     return roomInfo;
     
 }
 var joinUserInRoom = (rooms,roomIndex,data) => {
     var user = {};
-    user.userId = data.userId;
-    user.userName = data.userName;
-    user.profileLink = data.profileLink;
+    user.userId = data.user.userId;
+    user.username = data.user.username;
+    user.profileLink = data.user.profileLink;
     rooms[roomIndex].noOfUsers++;
     rooms[roomIndex].userList.push(user);
 } 

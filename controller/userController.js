@@ -45,7 +45,7 @@ UserController.prototype.login = async function (req,res) {
 }
 
 
-UserController.prototype.details = async function (req,res){      
+UserController.prototype.details = async function (req,res){          
     this.response = setSuccessResponse("User details retrieved successfully.",req.user);    
     res.send(this.response);
 }

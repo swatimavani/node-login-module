@@ -22,15 +22,21 @@ SocketServices.prototype.createOrJoin = function(socket,data,io){
     roomServices.createOrJoin(socket,data,io);
 }
 
-SocketServices.prototype.removeUser = async function(socket){
-    console.log("connected userc before : ", gameData.connectedUser);
+SocketServices.prototype.gameStarted = function(data){
+    if(data.room){
+        data.room.userList.forEach(function(value){
+            console.log(value);
+        });
+    }
+}
+
+SocketServices.prototype.removeUser = async function(socket){  
+    console.log('Remove User');  
     socket.emit("leaveRoom");
-    
+    await this.leaveRoom(socket);
     if(gameData.connectedUser[socket.userId]){
 
-        delete gameData.connectedUser[socket.userId];  
-        console.log("connected user : ", gameData.connectedUser);
-        
+        delete gameData.connectedUser[socket.userId];         
         await userController.manageUserStatus(socket.userId,config.userStatus[0]); 
        
         if(gameData.connectedUser[socket.userId])

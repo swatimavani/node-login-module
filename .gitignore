@@ -1,3 +1,5 @@
 node_modules/
 .vscode
 server/index_test.js
+socket.html
+socket1.html

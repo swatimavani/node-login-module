@@ -30,8 +30,6 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
 }
 socketRoomServices.prototype.leaveRoom = async function(socket){
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId]["isInRoom"]){
-        // var rooms = await _.union(gameData.fullRooms,gameData.existingRooms,gameData.friendRooms); 
-        console.log(" e rooms" , JSON.stringify(gameData.fullRooms));
         
         var rooms = gameData.fullRooms.concat(gameData.existingRooms).concat(gameData.friendRooms);
         console.log("rooms" , JSON.stringify(rooms));
@@ -65,11 +63,11 @@ socketRoomServices.prototype.leaveRoom = async function(socket){
 }
 
 function CreateRoom(socket,data){   
-    console.log("Create room");  
+    console.log("Create room",data);  
     var newRoom =  generateRoomName();
     data.roomName = newRoom;
     data.roomStatus = constant.roomStatus.EXISTING_ROOM;
-    data.userId = socket.userId;
+    data.user.userId = socket.userId;
     var roomInfo = setRoomInfo(data);
     gameData.existingRooms.push(roomInfo);
 
@@ -87,21 +85,24 @@ function JoinRoom(socket,data,io){
 
     var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.roomSize});
     if(existingRoomIndex >= 0){
-        data.userId = socket.userId;
+        data.user.userId = socket.userId;
         joinUserInRoom(gameData.existingRooms,existingRoomIndex,data);
         gameData.connectedUser[socket.userId]["isInRoom"] = true;
-
-        socket.join(gameData.existingRooms[existingRoomIndex].roomName);
-        console.log("onJoinRoom",gameData.existingRooms[existingRoomIndex]);
-        
-        io.in(gameData.existingRooms[existingRoomIndex].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,gameData.existingRooms[existingRoomIndex].roomName,data))); 
-        shiftFromExistingToFullRoom(existingRoomIndex);
+        var existingRoom = gameData.existingRooms[existingRoomIndex];
+        socket.join(existingRoom.roomName);
+        console.log("onJoinRoom",existingRoom);
+        var responseData = {room:existingRoom,joinedUserId:data.user.userId};
+        io.in(existingRoom.roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',responseData)); 
+        var shiftedRoomName = shiftFromExistingToFullRoom(existingRoomIndex);
+        if(shiftedRoomName){
+            io.in(shiftedRoomName).emit("onGameStart",setSuccessResponse('Game Started.'));      
+        }
     }else{
         CreateRoom(socket,data);
     }
     // for(var i = 0; i < gameData.existingRooms.length; i++){
     //     if(gameData.existingRooms[i].roomSize == data.roomSize){
-    //         data.userId = socket.userId;
+    //         data.user.userId = socket.userId;
     //         joinUserInRoom(gameData.existingRooms,i,data);
     //         gameData.connectedUser[socket.userId]["isInRoom"] = true;
 
@@ -121,17 +122,15 @@ function JoinRoom(socket,data,io){
 function shiftFromExistingToFullRoom(index){
     if(gameData.existingRooms[index].noOfUsers == gameData.existingRooms[index].roomSize){
         var firstRoom =_.pullAt(gameData.existingRooms,[index]);
-        firstRoom[0].roomStatus = constant.roomStatus.FULL_ROOM;
-        gameData.fullRooms.push(firstRoom[0]);
-        
-        
-        console.log("shiftFromExistingToFullRoom first room : ", firstRoom );
-        
-        console.log("shiftFromExistingToFullRoom : ", gameData.fullRooms );
-        
+        if(firstRoom.length > 0){
+            firstRoom[0].roomStatus = constant.roomStatus.FULL_ROOM;
+            gameData.fullRooms.push(firstRoom[0]);       
+            return firstRoom[0].roomName;
+        }
+        return false;
     }
     else{
-        return;
+        return false;
     }
 }
 function removePlayerFromRoom(socket,rooms){
@@ -151,7 +150,8 @@ function removePlayerFromRoom(socket,rooms){
     socket.emit('onLeaveRoom',setSuccessResponse('Leave room successfully.', {room :rooms[roomIndex].roomName, userId : socket.userId}));     
     socket.to(rooms[roomIndex].roomName).emit("onOpponentLeaveRoom",setPlayerData(socket.userId,rooms[roomIndex]));    
     if(rooms[roomIndex].noOfUsers == 0){
-        _.pullAt(rooms,[roomIndex]);           
+        _.pullAt(rooms,[roomIndex]);    
+        console.log('rooms ', rooms);       
     }   
 }
 
