@@ -32,7 +32,7 @@ SocketServices.prototype.gameStarted = function(data){
 
 SocketServices.prototype.removeUser = async function(socket){  
     console.log('Remove User');  
-    socket.emit("leaveRoom");
+    // socket.emit("leaveRoom");
     await this.leaveRoom(socket);
     if(gameData.connectedUser[socket.userId]){
 
@@ -45,7 +45,7 @@ SocketServices.prototype.removeUser = async function(socket){
  }
  
  SocketServices.prototype.leaveRoom = async function(socket){   
-    var leave = roomServices.leaveRoom(socket,gameData);
+    var leave = roomServices.leaveRoom(socket);
     if(leave){
         userController.manageUserStatus(socket.userId,config.userStatus[1]);
     }

@@ -21,7 +21,8 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
         var newRoom =  generateRoomName();
         data.roomName = newRoom;
         data.roomStatus = constant.roomStatus.FRIEND_ROOM;
-        data.userId = socket.userId;
+        
+        data.user.userId = socket.userId;
         
         var roomInfo = setRoomInfo(data);
         
@@ -41,8 +42,10 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
 socketFriendRequestServices.prototype.sendRequest = function(socket,data){
     if(gameData.connectedUser[socket.userId]["isInRoom"]){
         if(gameData.connectedUser[data.friendUserId]["status"] == config.userStatus[1] && !gameData.connectedUser[data.friendUserId]["isInRoom"]){
+           console.log("data ", JSON.stringify(data));
+           
             var index = getPlayerRoomIndex(data.roomName);
-            socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.roomName,data)));
+            socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.roomName)));
         }
         else{
             socket.emit("onSendRequest",setErrorResponse("Requested player playing or offline."));
@@ -57,18 +60,24 @@ socketFriendRequestServices.prototype.manageRequest = async function(socket,data
     if(data.status == "accept"){
         var index = await getPlayerRoomIndex(data.roomName);
         if(index < 0){
-            socket.emit("onRejectRequest",setErrorResponse("player reject your request"));
+            socket.emit("onRoomNotFound",setErrorResponse("player reject your request"));
             
             return;
         }
-       data.userId = socket.userId;
-
+        // console.log("data.user.userId ",data.user.userId);
+        data.user = {};
+       data.user.userId = socket.userId;
+       console.log("data.user.userId ",data.user.userId);
+        
         joinUserInRoom(gameData.friendRooms,index,data);
+        
         socket.join(data.roomName);
-        io.in(data.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,data.roomName,data)));   
+        gameData.connectedUser[socket.userId]["isInRoom"] = true;
+        var responseData = {room:gameData.friendRooms[index],joinedUserId:data.user.userId};
+        io.in(data.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',responseData));   
         var shiftedRoomName = shiftFromFriendToFullRoom(index);
         if(shiftedRoomName){
-            io.in(data.roomName).emit("onGameStart",setSuccessResponse('Can play',gameData.friendRooms[index]));   
+            io.in(data.roomName).emit("onGameStart",setSuccessResponse('Can play'));   
             
         }
     }
@@ -81,9 +90,9 @@ function shiftFromFriendToFullRoom(index){
     if(gameData.friendRooms[index].noOfUsers == gameData.friendRooms[index].roomSize){
         var firstRoom = _.pullAt(gameData.friendRooms,[index]);
         if(firstRoom.length > 0){
-            firstRoom.roomStatus = constant.roomStatus.FULL_ROOM;
-            gameData.fullRooms.push(firstRoom);
-            return firstRoom.roomName;
+            firstRoom[0].roomStatus = constant.roomStatus.FULL_ROOM;
+            gameData.fullRooms.push(firstRoom[0]);
+            return firstRoom[0].roomName;
         }
         return false;
     }
