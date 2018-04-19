@@ -5,7 +5,7 @@ module.exports = (io) => {
     //Enable cross domain access from evry wahere
     //io.origins('*:*'); 
     io.on('connection',(socket)=> {            
-
+        
         console.log("Connected");
 
         socket.on('disconnect',()=>services.removeUser(socket));
@@ -17,6 +17,8 @@ module.exports = (io) => {
         socket.on('gameStarted', (data) => services.gameStarted(data));
         
         socket.on("leaveRoom",()=> services.leaveRoom(socket));
+
+        socket.on("changeStatus",()=>services.changeStatus(socket,data));
         
         socket.on("createFriendsRoom", (data) => services.createFriendsRoom(socket,data));
 
@@ -24,6 +26,10 @@ module.exports = (io) => {
 
         socket.on("manageRequest", (data) => services.manageRequest(socket,data,io));
 
+        socket.on('message', (data) => services.message(socket,data));
+        
+        socket.on('messageToAll', (data) => services.messageToAll(data,io));  
+    
     });
 
 }

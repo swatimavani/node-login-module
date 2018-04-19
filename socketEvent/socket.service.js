@@ -63,14 +63,33 @@ SocketServices.prototype.removeUser = async function(socket){
     friendRequestServices.manageRequest(socket,data,io);
  }
 
+ SocketServices.prototype.changeStatus = async function(socket,data){
+    socket.broadcast.emit('onChangeStatus',data);
+ }
+
+ SocketServices.prototype.message = function (socket,data) {	   
+    if(data){
+        if(data.room)
+            socket.to(data.room.roomName).emit(data.methodName, data);
+        else
+            socket.emit(data.methodName, data);
+    }
+}
+
+SocketServices.prototype.messageToAll = function (data,io) {		           
+    if(data){
+        if(data.room)
+            io.in(data.room.roomName).emit(data.methodName, data);  
+    }
+        
+}
 function addUserInConnectedUser(socket,userId){
     socket.userId = userId;
     if(!gameData.connectedUser[userId] ){
         gameData.connectedUser[userId] = new Array();
         gameData.connectedUser[userId]["socketId"] = socket.id;   
         gameData.connectedUser[userId]["isInRoom"] = false;
-        socket.emit("onAddUser",setSuccessResponse("Player is added"));
-        
+        socket.emit("onAddUser",setSuccessResponse("Player is added"));   
     }
     else{
         socket.emit("errorEvent",setErrorResponse("Player is already added"));

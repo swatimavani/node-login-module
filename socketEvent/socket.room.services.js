@@ -65,8 +65,8 @@ socketRoomServices.prototype.leaveRoom = async function(socket){
 function CreateRoom(socket,data){   
     console.log("Create room",data);  
     var newRoom =  generateRoomName();
-    data.roomName = newRoom;
-    data.roomStatus = constant.roomStatus.EXISTING_ROOM;
+    data.room.roomName = newRoom;
+    data.room.roomStatus = constant.roomStatus.EXISTING_ROOM;
     data.user.userId = socket.userId;
     var roomInfo = setRoomInfo(data);
     gameData.existingRooms.push(roomInfo);
@@ -74,16 +74,16 @@ function CreateRoom(socket,data){
     console.log("existing room : ", gameData.existingRooms);
     
     gameData.connectedUser[socket.userId]["isInRoom"] = true;
-    socket.join(data.roomName);
-    console.log("onCreateRoom",setSuccessResponse("Room created successfully.",roomInfo));
+    socket.join(data.room.roomName);
+    console.log("onCreateRoom",setSuccessResponse("Room created successfully.",{room:roomInfo}));
     
-    socket.emit("onCreateRoom",setSuccessResponse("Room created successfully.",roomInfo));      
+    socket.emit("onCreateRoom",setSuccessResponse("Room created successfully.",{room:roomInfo}));      
 }
 
 function JoinRoom(socket,data,io){
     console.log("Join room : ",gameData.existingRooms.length ); 
 
-    var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.roomSize});
+    var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.room.roomSize});
     if(existingRoomIndex >= 0){
         data.user.userId = socket.userId;
         joinUserInRoom(gameData.existingRooms,existingRoomIndex,data);
@@ -91,8 +91,8 @@ function JoinRoom(socket,data,io){
         var existingRoom = gameData.existingRooms[existingRoomIndex];
         socket.join(existingRoom.roomName);
         console.log("onJoinRoom",existingRoom);
-        var responseData = {room:existingRoom,joinedUserId:data.user.userId};
-        io.in(existingRoom.roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',responseData)); 
+        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:existingRoom})); 
+        socket.to(existingRoom.roomName).emit("onOpponentJoinRoom",setSuccessResponse('Room joined successfully.',{user:data.user})); 
         var shiftedRoomName = shiftFromExistingToFullRoom(existingRoomIndex);
         if(shiftedRoomName){
             io.in(shiftedRoomName).emit("onGameStart",setSuccessResponse('Game Started.'));      
@@ -100,24 +100,6 @@ function JoinRoom(socket,data,io){
     }else{
         CreateRoom(socket,data);
     }
-    // for(var i = 0; i < gameData.existingRooms.length; i++){
-    //     if(gameData.existingRooms[i].roomSize == data.roomSize){
-    //         data.user.userId = socket.userId;
-    //         joinUserInRoom(gameData.existingRooms,i,data);
-    //         gameData.connectedUser[socket.userId]["isInRoom"] = true;
-
-    //         socket.join(gameData.existingRooms[i].roomName);
-    //         console.log("onJoinRoom",gameData.existingRooms[i]);
-            
-    //         io.in(gameData.existingRooms[i].roomName).emit("onJoinRoom",setSuccessResponse('Room joined successfully.',setPlayerData(socket.userId,gameData.existingRooms[i].roomName,data))); 
-    //         shiftFromExistingToFullRoom(i);
-    //         return;  
-    //     }
-    // }
-   
-    //socket.emit('onFailJoinRoom',setErrorResponse('Room does not exist.'));
-    
-    
 }
 function shiftFromExistingToFullRoom(index){
     if(gameData.existingRooms[index].noOfUsers == gameData.existingRooms[index].roomSize){
@@ -147,8 +129,12 @@ function removePlayerFromRoom(socket,rooms){
     rooms[roomIndex].noOfUsers--;
     gameData.connectedUser[socket.userId]["isInRoom"] = false;
     gameData.connectedUser[socket.userId]["status"] = config.userStatus[1];  
-    socket.emit('onLeaveRoom',setSuccessResponse('Leave room successfully.', {room :rooms[roomIndex].roomName, userId : socket.userId}));     
-    socket.to(rooms[roomIndex].roomName).emit("onOpponentLeaveRoom",setPlayerData(socket.userId,rooms[roomIndex]));    
+    
+    socket.emit('onLeaveRoom',setSuccessResponse('Leave room successfully.'));     
+    
+    var responseData = setSuccessResponse('Leave room successfully.',{room:rooms[roomIndex],user:{userId:socket.userId}});
+    socket.to(rooms[roomIndex].roomName).emit("onOpponentLeaveRoom",responseData);    
+    
     if(rooms[roomIndex].noOfUsers == 0){
         _.pullAt(rooms,[roomIndex]);    
         console.log('rooms ', rooms);       

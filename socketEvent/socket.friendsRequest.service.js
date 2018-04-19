@@ -19,8 +19,8 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
     if(gameData.connectedUser[socket.userId] && !gameData.connectedUser[socket.userId]["isInRoom"]){
         
         var newRoom =  generateRoomName();
-        data.roomName = newRoom;
-        data.roomStatus = constant.roomStatus.FRIEND_ROOM;
+        data.room.roomName = newRoom;
+        data.room.roomStatus = constant.roomStatus.FRIEND_ROOM;
         
         data.user.userId = socket.userId;
         
@@ -32,7 +32,7 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
         console.log(gameData.friendRooms);
         
         socket.join(roomInfo.roomName);
-        socket.emit("onCreateFriendRoom",setSuccessResponse("Room created successfully.",roomInfo));
+        socket.emit("onCreateFriendRoom",setSuccessResponse("Room created successfully.",{room:roomInfo}));
     
     }else{
         socket.emit('onFailRoomCreate',setErrorResponse('Fail to create room.'));
@@ -44,7 +44,7 @@ socketFriendRequestServices.prototype.sendRequest = function(socket,data){
         if(gameData.connectedUser[data.friendUserId]["status"] == config.userStatus[1] && !gameData.connectedUser[data.friendUserId]["isInRoom"]){
            console.log("data ", JSON.stringify(data));
            
-            var index = getPlayerRoomIndex(data.roomName);
+            var index = getPlayerRoomIndex(data.room.roomName);
             socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.roomName)));
         }
         else{
@@ -58,26 +58,25 @@ socketFriendRequestServices.prototype.sendRequest = function(socket,data){
 
 socketFriendRequestServices.prototype.manageRequest = async function(socket,data,io){
     if(data.status == "accept"){
-        var index = await getPlayerRoomIndex(data.roomName);
+        var index = await getPlayerRoomIndex(data.room.roomName);
         if(index < 0){
             socket.emit("onRoomNotFound",setErrorResponse("player reject your request"));
             
             return;
         }
-        // console.log("data.user.userId ",data.user.userId);
-        data.user = {};
        data.user.userId = socket.userId;
        console.log("data.user.userId ",data.user.userId);
         
         joinUserInRoom(gameData.friendRooms,index,data);
         
-        socket.join(data.roomName);
+        socket.join(data.room.roomName);
         gameData.connectedUser[socket.userId]["isInRoom"] = true;
         var responseData = {room:gameData.friendRooms[index],joinedUserId:data.user.userId};
-        io.in(data.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',responseData));   
+        socket.emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',responseData));   
+        io.in(data.room.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',responseData));   
         var shiftedRoomName = shiftFromFriendToFullRoom(index);
         if(shiftedRoomName){
-            io.in(data.roomName).emit("onGameStart",setSuccessResponse('Can play'));   
+            io.in(data.room.roomName).emit("onGameStart",setSuccessResponse('Can play'));   
             
         }
     }
