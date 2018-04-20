@@ -10,7 +10,7 @@ function SocketServices() {
 const maxPlayersInRoom = config.game.maxPlayersInRoom;
 
 SocketServices.prototype.addUser = async function(socket,data){   
-    console.log("connected user ", socket.id);  
+    console.log("connected user ", data.userId);  
     var userId = data.userId?data.userId:"";  
     await addUserInConnectedUser(socket,userId);
     await manageUserStatus(userId,config.userStatus[1]);
@@ -44,8 +44,8 @@ SocketServices.prototype.removeUser = async function(socket){
     }
  }
  
- SocketServices.prototype.leaveRoom = async function(socket){   
-    var leave = roomServices.leaveRoom(socket);
+ SocketServices.prototype.leaveRoom = async function(socket,data){   
+    var leave = roomServices.leaveRoom(socket,data);
     if(leave){
         userController.manageUserStatus(socket.userId,config.userStatus[1]);
     }

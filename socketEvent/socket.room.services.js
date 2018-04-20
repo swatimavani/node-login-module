@@ -28,31 +28,38 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
         socket.emit('onFailRoomCreate',setErrorResponse('Fail to create room.'));
     }    
 }
-socketRoomServices.prototype.leaveRoom = async function(socket){
+socketRoomServices.prototype.leaveRoom = async function(socket,data){
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId]["isInRoom"]){
         
         var rooms = gameData.fullRooms.concat(gameData.existingRooms).concat(gameData.friendRooms);
         console.log("rooms" , JSON.stringify(rooms));
-          
-        var room = _.find(rooms, function(o) {
-            return _.find(o.userList, {userId : socket.userId});
-        });
+        var room;
+        if(data){
 
+            room = rooms[data.room.roomName];
+        }
+        else{
+            room = _.find(rooms, function(o) {
+                return _.find(o.userList, {userId : socket.userId});
+
+            });
+        }
+            
         console.log("room" , JSON.stringify(room));
         
         if(room){
             if(room.roomStatus == constant.roomStatus.EXISTING_ROOM){
-                removePlayerFromRoom(socket,gameData.existingRooms);
+                removePlayerFromRoom(socket,gameData.existingRooms,room.roomName);
                 return true;
             }
             
             else if(room.roomStatus == constant.roomStatus.FULL_ROOM){
-                removePlayerFromRoom(socket,gameData.fullRooms);
+                removePlayerFromRoom(socket,gameData.fullRooms,room.roomName);
                 return true;
             }
             
             else{
-                removePlayerFromRoom(socket,gameData.friendRooms);
+                removePlayerFromRoom(socket,gameData.friendRooms,room.roomName);
                 return true;
             } 
         }
@@ -69,7 +76,9 @@ function CreateRoom(socket,data){
     data.room.roomStatus = constant.roomStatus.EXISTING_ROOM;
     data.user.userId = socket.userId;
     var roomInfo = setRoomInfo(data);
-    gameData.existingRooms.push(roomInfo);
+
+    gameData.existingRooms[newRoom] = roomInfo;
+    // gameData.existingRooms.push(roomInfo);
 
     console.log("existing room : ", gameData.existingRooms);
     
@@ -115,16 +124,20 @@ function shiftFromExistingToFullRoom(index){
         return false;
     }
 }
-function removePlayerFromRoom(socket,rooms){
-    var roomIndex = _.findIndex(rooms, function(room) {
-        var usersInRoom = _.find(room.userList, {userId : socket.userId});
-        if(usersInRoom){
-            return room;
-        }
-    });
-   console.log("removePlayerFromRoom : ",roomIndex);
-    socket.leave(rooms[roomIndex].roomName);
-    var removedUser = removeUserFromRoom(rooms[roomIndex],socket.userId);
+function removePlayerFromRoom(socket,rooms,roomName){
+
+    // var roomIndex = _.findIndex(rooms, function(room) {
+    //     var usersInRoom = _.find(room.userList, {userId : socket.userId});
+    //     if(usersInRoom){
+    //         return room;
+    //     }
+    // });
+
+
+
+   console.log("removePlayerFromRoom : ",roomName);
+    socket.leave(roomName);
+    var removedUser = removeUserFromRoom(rooms[roomName],socket.userId);
         
     rooms[roomIndex].noOfUsers--;
     gameData.connectedUser[socket.userId]["isInRoom"] = false;
@@ -136,7 +149,8 @@ function removePlayerFromRoom(socket,rooms){
     socket.to(rooms[roomIndex].roomName).emit("onOpponentLeaveRoom",responseData);    
     
     if(rooms[roomIndex].noOfUsers == 0){
-        _.pullAt(rooms,[roomIndex]);    
+        _.pullAt(rooms,[roomIndex]);   
+        // rooms.splice(roomIndex,1); 
         console.log('rooms ', rooms);       
     }   
 }

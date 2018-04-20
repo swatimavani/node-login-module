@@ -6,7 +6,7 @@ var authenticate = async (req,res,next) => {
     var token = await Token.findByToken(token);
 	if(token){
         req.user = token;
-        req.token = token;
+        // req.token = token;
         // console.log(req.user);	
         next();
     }else{

@@ -25,8 +25,8 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
         data.user.userId = socket.userId;
         
         var roomInfo = setRoomInfo(data);
-        
-        gameData.friendRooms.push(roomInfo);
+        gameData.friendRooms[newRoom] = roomInfo; 
+        // gameData.friendRooms.push(roomInfo);
         gameData.connectedUser[socket.userId]["isInRoom"] = true;
         
         console.log(gameData.friendRooms);
@@ -44,8 +44,8 @@ socketFriendRequestServices.prototype.sendRequest = function(socket,data){
         if(gameData.connectedUser[data.friendUserId]["status"] == config.userStatus[1] && !gameData.connectedUser[data.friendUserId]["isInRoom"]){
            console.log("data ", JSON.stringify(data));
            
-            var index = getPlayerRoomIndex(data.room.roomName);
-            socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.roomName)));
+           // var index = getPlayerRoomIndex(data.room.roomName);
+            socket.to(gameData.connectedUser[data.friendUserId]["socketId"]).emit("onRequestSend",setSuccessResponse("Request Send",setPlayerData(socket.userId,data.room.roomName)));
         }
         else{
             socket.emit("onSendRequest",setErrorResponse("Requested player playing or offline."));
@@ -58,8 +58,9 @@ socketFriendRequestServices.prototype.sendRequest = function(socket,data){
 
 socketFriendRequestServices.prototype.manageRequest = async function(socket,data,io){
     if(data.status == "accept"){
-        var index = await getPlayerRoomIndex(data.room.roomName);
-        if(index < 0){
+       // var index = await getPlayerRoomIndex(data.room.roomName);
+        // if(index < 0){
+        if(!gameData.friendRooms[data.room.roomName]){
             socket.emit("onRoomNotFound",setErrorResponse("player reject your request"));
             
             return;
@@ -71,7 +72,7 @@ socketFriendRequestServices.prototype.manageRequest = async function(socket,data
         
         socket.join(data.room.roomName);
         gameData.connectedUser[socket.userId]["isInRoom"] = true;
-        var responseData = {room:gameData.friendRooms[index],joinedUserId:data.user.userId};
+        var responseData = {room:gameData.friendRooms[data.room.roomName],joinedUserId:data.user.userId};
         socket.emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',responseData));   
         io.in(data.room.roomName).emit("onJoinFriendRoom",setSuccessResponse('Room joined successfully.',responseData));   
         var shiftedRoomName = shiftFromFriendToFullRoom(index);
@@ -100,10 +101,10 @@ function shiftFromFriendToFullRoom(index){
     }
 }
 
-function getPlayerRoomIndex(roomName){
+// function getPlayerRoomIndex(roomName){
   
-    return _.findIndex(gameData.friendRooms, {roomName : roomName});
+//     return _.findIndex(gameData.friendRooms, {roomName : roomName});
  
-}
+// }
 
 
