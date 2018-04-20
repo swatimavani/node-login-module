@@ -29,6 +29,7 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     }    
 }
 socketRoomServices.prototype.leaveRoom = async function(socket){
+    console.log('leave room');
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId]["isInRoom"]){
         
         var rooms = gameData.fullRooms.concat(gameData.existingRooms).concat(gameData.friendRooms);

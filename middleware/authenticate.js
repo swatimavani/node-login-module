@@ -3,10 +3,10 @@ const {setSuccessResponse,setErrorResponse} = require('../utility/common');
 
 var authenticate = async (req,res,next) => {
 	var token = req.header('x-auth');
-    var token = await Token.findByToken(token);
-	if(token){
-        req.user = token;
-        req.token = token;
+    var user = await Token.findByToken(token);
+	if(user){
+        req.user = user;
+        // req.token = token;
         // console.log(req.user);	
         next();
     }else{

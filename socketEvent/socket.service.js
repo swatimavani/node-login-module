@@ -14,7 +14,6 @@ SocketServices.prototype.addUser = async function(socket,data){
     var userId = data.userId?data.userId:"";  
     await addUserInConnectedUser(socket,userId);
     await manageUserStatus(userId,config.userStatus[1]);
-
 }
 
 SocketServices.prototype.createOrJoin = function(socket,data,io){
@@ -32,15 +31,11 @@ SocketServices.prototype.gameStarted = function(data){
 
 SocketServices.prototype.removeUser = async function(socket){  
     console.log('Remove User');  
-    // socket.emit("leaveRoom");
-    await this.leaveRoom(socket);
+    socket.emit("leaveRoom");
+    // await this.leaveRoom(socket);
     if(gameData.connectedUser[socket.userId]){
-
-        delete gameData.connectedUser[socket.userId];         
-        await userController.manageUserStatus(socket.userId,config.userStatus[0]); 
-       
-        if(gameData.connectedUser[socket.userId])
-            gameData.connectedUser[socket.userId]["status"] = config.userStatus[0]; 
+        delete gameData.connectedUser[socket.userId];   
+        manageUserStatus(socket.userId,config.userStatus[0])             
     }
  }
  
@@ -98,8 +93,10 @@ function addUserInConnectedUser(socket,userId){
 }
 async function manageUserStatus(userId,status){   
     await userController.manageUserStatus(userId,status); 
-    if(gameData.connectedUser[userId])
+    if(gameData.connectedUser[userId]){
         gameData.connectedUser[userId]["status"] = status; 
+        socket.emit('changeStatus',{user:{userId:userId,status:status}});
+    }
     else
         socket.emit("errorEvent",setErrorResponse("Somthing went wrong"));
         
