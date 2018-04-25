@@ -12,27 +12,21 @@ function  UserController() {
 }
 
 function getExistingUser(deviceId){
-    return User.findOne({deviceId:deviceId,facebookId:null});
+    return User.findOne({deviceId:deviceId , facebookId : null,googleId : null});
 }
-UserController.prototype.login = async function (req,res) {    
-    var userData = _.pick(req.body,['facebookId','deviceId','username','profileLink','data','retrieveOldData']);
-    var where = {deleted:false,deviceId:userData.deviceId};   
+UserController.prototype.login = async function (req,res) {   
     
+    var userData = _.pick(req.body,['deviceId','username','profileLink','data','email']);
     try{
         var ExistingUser = await getExistingUser(userData.deviceId);
-        if(ExistingUser && (userData.retrieveOldData == 'true')){
-            var user = ExistingUser;       
-        }else{               
-            if(ExistingUser)
-                var existingUser =  removeUser(userData.deviceId);
-    
-            where.facebookId = userData.facebookId?userData.facebookId:null;       
-            var dataForUpdate = {username:userData.username};
-            
-            var user = await User.findOneAndUpdate(where,dataForUpdate,{new:true});
-                   
-            user = user?user:await new User(userData).save();
-            
+       
+        if(ExistingUser){
+            var existingUser = removeUser(userData.deviceId);
+           
+        }
+        else{
+   
+            var user = await new User(userData).save();
         }
         var token = await user.generateAuthToken(userData.deviceId);   
         this.response = setSuccessResponse("User loggedin successfully.",user);    
@@ -44,6 +38,43 @@ UserController.prototype.login = async function (req,res) {
     }   
 }
 
+UserController.prototype.linkAccount = async function(req,res){
+    var userData = _.pick(req.body,['googleId','facebookId','deviceId','username','profileLink','email']); 
+    if(userData.googleId || userData.facebookId){
+
+        var user = await User.findOne({$or : [{googleId : userData.googleId}, {facebookId : userData.facebookId}]}).exec();
+    
+        if(!user){
+            var ExistingUser = await getExistingUser(userData.deviceId);
+            if(ExistingUser){
+                userData.data = ExistingUser.data;
+                user = await new User(userData).save();
+              
+            }
+            else{
+                user = await new User(userData).save();
+                
+            }
+        }else{
+            user.googleId = userData.googleId ? userData.googleId : user.googleId;
+            user.facebookId = userData.facebookId ? userData.facebookId : user.facebookId;    
+            user.username = userData.username;
+            user.deviceId = userData.deviceId;
+            user.profileLink = userData.profileLink;
+            user.email = userData.email;
+            user = await user.save();
+       
+        }
+        var existingUser = removeUser(userData.deviceId);
+        var token = await user.generateAuthToken(userData.deviceId);   
+        this.response = setSuccessResponse("User loggedin successfully.",user);    
+        res.header('x-auth',token).send(this.response);
+    }else{
+        this.response = setErrorResponse("Internal server error.");
+        res.send(this.response);
+    }
+}
+
 
 UserController.prototype.details = async function (req,res){          
     this.response = setSuccessResponse("User details retrieved successfully.",req.user);    
@@ -51,7 +82,7 @@ UserController.prototype.details = async function (req,res){
 }
 
 async function removeUser(deviceId){   
-    var deletedUser = await User.findOneAndRemove({deviceId:deviceId,facebookId:null}).exec();   
+    var deletedUser = await User.findOneAndRemove({deviceId:deviceId, facebookId : null,googleId : null}).exec();   
     if(deletedUser){
         await Token.remove({userId:deletedUser._id});
     }
@@ -59,8 +90,8 @@ async function removeUser(deviceId){
 }
 
 UserController.prototype.update = function(req,res){
-    var obj = new UserController();   
-    var user = obj.updateUser(req.user._id,req.body);   
+    var userController = new UserController();   
+    var user = userController.updateUser(req.user._id,req.body);   
     this.response = setSuccessResponse("User updated successfully.",user);    
     res.send(this.response);
 }

@@ -10,7 +10,12 @@ var UserSchema = Schema({
 		minlength:1
     },
     email:{
-		type:String
+        type:String,
+        index : {
+            unique : true,
+            sparse : true
+        }
+        
     },
    
     deviceId:{
@@ -19,6 +24,10 @@ var UserSchema = Schema({
     facebookId:{
         type:String,
         default:null
+    },
+    googleId:{
+        type : String,
+        default : null
     },
     primaryCurrency:{
         type:Number,
@@ -58,7 +67,7 @@ var UserSchema = Schema({
 UserSchema.methods.toJSON = function(){
 	var user = this;
 	var userObject = user.toObject();
-    var user = _.pick(userObject,['_id','facebookId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
+    var user = _.pick(userObject,['_id','facebookId','googleId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
     user.userId = user._id;   
     return user;
 };

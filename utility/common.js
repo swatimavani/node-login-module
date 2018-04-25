@@ -36,7 +36,7 @@ var setRoomInfo = (roomData) => {
     roomInfo.noOfUsers = 1;
 
     // roomInfo.roomName = roomData.room.roomName;
-    // roomInfo.roomSize = roomData.room.roomSize;
+    roomInfo.roomSize = roomData.room.roomSize;
     // roomInfo.roomStatus = roomData.room.roomStatus;  
 
     roomInfo.userList = [];

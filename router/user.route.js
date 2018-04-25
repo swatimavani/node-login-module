@@ -8,7 +8,7 @@ router.post('/login', userController.login);
 router.get('/details', authenticate, userController.details);
 router.post('/update', authenticate, userController.update);
 router.post('/friends',  authenticate, userController.getAllFriends)
-
+router.post('/linkAccount',userController.linkAccount);
 
 
 module.exports = router;
