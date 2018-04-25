@@ -34,7 +34,7 @@ var UserSchema = Schema({
     },
     status:{
         type:String,
-        default:config.userStatus[0]
+        default:config.userStatus.OFFLINE
     },
     data:{
         type:String,
