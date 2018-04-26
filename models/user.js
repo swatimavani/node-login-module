@@ -14,7 +14,8 @@ var UserSchema = Schema({
     },
    
     deviceId:{
-        type:String
+        type:String,
+        required:true
     },
     facebookId:{
         type:String,

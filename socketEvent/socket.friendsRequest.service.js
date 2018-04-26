@@ -56,7 +56,7 @@ socketFriendRequestServices.prototype.sendRequest = function(socket,data){
     }
 }
 
-socketFriendRequestServices.prototype.manageRequest = async function(socket,data,io){
+socketFriendRequestServices.prototype.manageRequest = function(socket,data,io){
     if(data.status == "accept"){
         var roomName = data.room.roomName;
         if(!gameData.friendRooms[roomName]){
