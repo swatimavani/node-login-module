@@ -1,7 +1,7 @@
 var userController = require('../controller/userController');
 var roomServices = require('./socket.room.services');
 var friendRequestServices = require('./socket.friendsRequest.service');
-var {gameData} = require('./gameData/socket.gameData');
+var {gameData,changeStatus} = require('./gameData/socket.roomData');
 const {setSuccessResponse,setErrorResponse} = require('../utility/common');
 module.exports = new SocketServices;
 
@@ -13,8 +13,6 @@ SocketServices.prototype.addUser = async function(socket,data){
     console.log("connected user ", data.userId);  
     var userId = data.userId?data.userId:"";  
     await addUserInConnectedUser(socket,userId);
-    await manageUserStatus(userId,config.userStatus[1]);
-
 }
 
 SocketServices.prototype.createOrJoin = function(socket,data,io){
@@ -32,23 +30,23 @@ SocketServices.prototype.gameStarted = function(data){
 
 SocketServices.prototype.removeUser = async function(socket){  
     console.log('Remove User');  
-    // socket.emit("leaveRoom");
-    await this.leaveRoom(socket);
-    if(gameData.connectedUser[socket.userId]){
+    try{
+        await this.leaveRoom(socket,null);
 
-        delete gameData.connectedUser[socket.userId];         
-        await userController.manageUserStatus(socket.userId,config.userStatus[0]); 
-       
-        if(gameData.connectedUser[socket.userId])
-            gameData.connectedUser[socket.userId]["status"] = config.userStatus[0]; 
+    }
+    catch(err){
+        console.log(err);
+        
+    }
+    if(gameData.connectedUser[socket.userId]){
+        delete gameData.connectedUser[socket.userId];   
+        changeStatus(socket,config.userStatus.OFFLINE)             
     }
  }
  
  SocketServices.prototype.leaveRoom = async function(socket,data){   
-    var leave = roomServices.leaveRoom(socket,data);
-    if(leave){
-        userController.manageUserStatus(socket.userId,config.userStatus[1]);
-    }
+    roomServices.leaveRoom(socket,data);
+    changeStatus(socket.userId,config.userStatus.ONLINE);
  }
 
  SocketServices.prototype.createFriendsRoom = async function(socket,data){
@@ -61,10 +59,6 @@ SocketServices.prototype.removeUser = async function(socket){
 
  SocketServices.prototype.manageRequest = async function(socket,data,io){
     friendRequestServices.manageRequest(socket,data,io);
- }
-
- SocketServices.prototype.changeStatus = async function(socket,data){
-    socket.broadcast.emit('onChangeStatus',data);
  }
 
  SocketServices.prototype.message = function (socket,data) {	   
@@ -90,18 +84,12 @@ function addUserInConnectedUser(socket,userId){
         gameData.connectedUser[userId]["socketId"] = socket.id;   
         gameData.connectedUser[userId]["isInRoom"] = false;
         socket.emit("onAddUser",setSuccessResponse("Player is added"));   
+        changeStatus(socket,config.userStatus.ONLINE);
     }
     else{
         socket.emit("errorEvent",setErrorResponse("Player is already added"));
     }
     
 }
-async function manageUserStatus(userId,status){   
-    await userController.manageUserStatus(userId,status); 
-    if(gameData.connectedUser[userId])
-        gameData.connectedUser[userId]["status"] = status; 
-    else
-        socket.emit("errorEvent",setErrorResponse("Somthing went wrong"));
-        
-}
+
 

@@ -10,11 +10,16 @@ const carrom = {
     PORT:3001,
     database:"carrom",
     secret:"Carrom12#",
-    userStatus:['offline','online','playing'],
+    userStatus:{
+        ONLINE:"online",
+        OFFLINE:"offline",
+        PLAYING:"playing",
+        REQUESTED:"requested"
+    },
     game:{
-        "primaryCurrency":10,
-        "secondaryCurrency":100,       
-		"maxPlayersInRoom" : 2      
+        primaryCurrency:10,
+        secondaryCurrency:100,       
+		maxPlayersInRoom : 2      
     }
 }
 
@@ -24,9 +29,9 @@ const test = {
     secret:"Snl12#",
     userStatus:['offline','online','playing'],
     game:{
-        "primaryCurrency":10,
-        "secondaryCurrency":100,       
-		"maxPlayersInRoom" : 2       
+        primaryCurrency:10,
+        secondaryCurrency:100,       
+		maxPlayersInRoom : 2       
     }   
 }
 

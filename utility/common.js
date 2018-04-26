@@ -2,9 +2,8 @@ var responseObj = {
     response :{
         status : false,
         message: "fail",
-
     },
-    data : {}
+    payload : {}
 };
 
 
@@ -13,7 +12,7 @@ var setSuccessResponse = (message,data) =>{
     responseObj.response.message = message;
     responseObj.payload = data?data:{};   
     return responseObj;
-}
+};
 
 var setErrorResponse = (message) =>{   
     responseObj.response.status = false;
@@ -38,18 +37,5 @@ var setRoomInfo = (roomData) => {
     // roomInfo.roomName = roomData.room.roomName;
     roomInfo.roomSize = roomData.room.roomSize;
     // roomInfo.roomStatus = roomData.room.roomStatus;  
-
-    roomInfo.userList = [];
-    roomInfo.userList.push(roomData.user);
-    return roomInfo;
-    
 }
-var joinUserInRoom = (rooms,roomIndex,data) => {
-    // var user = {};
-    // user.userId = data.user.userId;
-    // user.username = data.user.username;
-    // user.profileLink = data.user.profileLink;
-    rooms[roomIndex].noOfUsers++;
-    rooms[roomIndex].userList.push(data.user);
-} 
-module.exports = {setSuccessResponse,setErrorResponse,setPlayerData,setRoomInfo,joinUserInRoom}
+module.exports = {setSuccessResponse,setErrorResponse};

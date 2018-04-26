@@ -16,9 +16,7 @@ module.exports = (io) => {
         
         socket.on('gameStarted', (data) => services.gameStarted(data));
         
-        socket.on("leaveRoom",()=> services.leaveRoom(socket,data));
-
-        socket.on("changeStatus",()=>services.changeStatus(socket,data));
+        socket.on("leaveRoom",(data)=> services.leaveRoom(socket,data));
         
         socket.on("createFriendsRoom", (data) => services.createFriendsRoom(socket,data));
 
