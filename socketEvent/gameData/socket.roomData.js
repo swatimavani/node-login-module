@@ -50,11 +50,11 @@ var shiftToFullRoom = function (rooms,index){
     }
 }
 
-var changeStatus = async function(socket,status){   
+var changeStatus = async function(socket,index,status){   
     if(socket){
         await userController.manageUserStatus(socket.userId,status); 
-        if(gameData.connectedUser[socket.userId]){
-            gameData.connectedUser[socket.userId]["status"] = status; 
+        if(gameData.connectedUser[index]){
+            gameData.connectedUser[index].status = status; 
             socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
         }
         
