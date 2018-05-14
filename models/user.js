@@ -10,7 +10,12 @@ var UserSchema = Schema({
 		minlength:1
     },
     email:{
-		type:String
+        type:String,
+        index : {
+            unique : true,
+            sparse : true
+        }
+        
     },
    
     deviceId:{
@@ -20,6 +25,10 @@ var UserSchema = Schema({
     facebookId:{
         type:String,
         default:null
+    },
+    googleId:{
+        type : String,
+        default : null
     },
     primaryCurrency:{
         type:Number,
@@ -59,7 +68,7 @@ var UserSchema = Schema({
 UserSchema.methods.toJSON = function(){
 	var user = this;
 	var userObject = user.toObject();
-    var user = _.pick(userObject,['_id','facebookId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
+    var user = _.pick(userObject,['_id','facebookId','googleId','username','profileLink','primaryCurrency','secondaryCurrency','data','status']);
     user.userId = user._id;   
     return user;
 };
@@ -83,7 +92,7 @@ var User = mongoose.model('User',UserSchema);
 var TokenSchema = Schema({
     userId:{
         type:Schema.Types.ObjectId,
-        ref:'User'
+        ref:'User'  
     },
     deviceId:{
 		type:String	
@@ -106,13 +115,13 @@ TokenSchema.statics.findByToken = async function(token){
 	var Token = this;
 	var decoded;
 	try{
-        decoded = jwt.verify(token,config.secret);              
-        var token = await Token.findOne({
+            decoded = jwt.verify(token,config.secret);
+            var token = await Token.findOne({
                 userId:decoded._id,
                 token:token
-            }).populate('userId');       
-        return token.userId;
-	}catch(e){
+            }).populate('userId');
+            return token.userId;
+	}catch(e){       
 		return null;
 	}
 	

@@ -33,44 +33,45 @@ SocketServices.prototype.removeUser = async function(socket){
     try{
         await this.leaveRoom(socket,null);
         if(gameData.connectedUser[socket.userId]){
-            delete gameData.connectedUser[socket.userId];   
+            // delete gameData.connectedUser[socket.userId];   
             changeStatus(socket,config.userStatus.OFFLINE)             
         }
-    }catch(e){
-        console.log("Error in remove user",e);
+    }catch(error){
+        console.log("Error in remove user",error);
         socket.emit("onError",setErrorResponse('Internal server Error'));
     }
     
  }
  
- SocketServices.prototype.leaveRoom = async function(socket,data){   
+ SocketServices.prototype.leaveRoom = function(socket,data){   
     roomServices.leaveRoom(socket,data);
     changeStatus(socket.userId,config.userStatus.ONLINE);
  }
 
- SocketServices.prototype.createFriendsRoom = async function(socket,data){
+ SocketServices.prototype.createFriendsRoom = function(socket,data){
     friendRequestServices.createRoom(socket,data);
  }
 
- SocketServices.prototype.sendRequest = async function(socket,data){
+ SocketServices.prototype.sendRequest = function(socket,data){
     friendRequestServices.sendRequest(socket,data);
  }
 
- SocketServices.prototype.manageRequest = async function(socket,data,io){
+ SocketServices.prototype.manageRequest = function(socket,data,io){
     friendRequestServices.manageRequest(socket,data,io);
  }
 
  SocketServices.prototype.message = function (socket,data) {
      try{
-        // if(data){
+        if(data){
             if(data.room)
                 socket.to(data.room.roomName).emit(data.methodName, data);
             else
                 socket.emit(data.methodName, data);
-        // }
+        }
         console.log('try block');
-     }	 catch(e){
-         console.log(e);
+     }catch(error){
+        console.log("Error in remove user",error);
+        socket.emit("onError",setErrorResponse('Internal server Error'));
      }  
     
 }

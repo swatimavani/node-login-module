@@ -51,13 +51,16 @@ var shiftToFullRoom = function (rooms,index){
 }
 
 var changeStatus = async function(socket,status){   
-    await userController.manageUserStatus(socket.userId,status); 
-    if(gameData.connectedUser[socket.userId]){
-        gameData.connectedUser[socket.userId]["status"] = status; 
-        socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
+    if(socket){
+        await userController.manageUserStatus(socket.userId,status); 
+        if(gameData.connectedUser[socket.userId]){
+            gameData.connectedUser[socket.userId]["status"] = status; 
+            socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
+        }
+        
     }
-    else
-        socket.emit("errorEvent",setErrorResponse("Somthing went wrong"));
+    // else
+        // socket.emit("errorEvent",{"Somthing went wrong"});
         
 }
 module.exports = {gameData,generateRoomName,setRoomInfo,joinUserInRoom,shiftToFullRoom,changeStatus}
