@@ -6,9 +6,9 @@ var userController = require('../../controller/userController');
 var gameData = {
     maxPlayersInRoom : config.game.maxPlayersInRoom,
     connectedUser : [],
-    existingRooms : {},
-    friendRooms : {},
-    fullRooms : {},
+    existingRooms : [],
+    friendRooms : [],
+    fullRooms : [],
     
 }
 

@@ -31,14 +31,10 @@ socketRoomServices.prototype.leaveRoom = async function(socket,data){
     console.log('leave room',data);
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId]["isInRoom"]){
         var rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
-        if(data){
-           var room = rooms[data.room.roomName];
-        }
-        else{
-            var room = _.find(rooms, function(o) {
-                return _.find(o.userList, {userId : socket.userId});
-            });
-        }
+       
+        var room = await _.find(rooms, function(o) {
+            return _.find(o.userList, {userId : socket.userId});
+        });
         
         if(room){
             if(room.roomStatus == constant.roomStatus.EXISTING_ROOM){
@@ -69,7 +65,7 @@ function CreateRoom(socket,data){
     
     var roomInfo = setRoomInfo(data);
 
-    gameData.existingRooms[newRoom] = roomInfo;
+    gameData.existingRooms.push(roomInfo);
     
     gameData.connectedUser[socket.userId]["isInRoom"] = true;
     
@@ -81,20 +77,20 @@ function CreateRoom(socket,data){
 }
 function JoinRoom(socket,data,io){
     console.log("Join room : ",data ); 
-    var existingRoom = _.find(gameData.existingRooms, {roomSize : data.room.roomSize});
-    if(existingRoom){
+    var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.room.roomSize});
+    if(existingRoomIndex >= 0){
         data.user.userId = socket.userId;
-        roomName = existingRoom.roomName;
+        roomName = existingRoom[existingRoomIndex].roomName;
         
-        joinUserInRoom(gameData.existingRooms,roomName,data);
+        joinUserInRoom(gameData.existingRooms,existingRoomIndex,data);
         socket.join(roomName);
         gameData.connectedUser[socket.userId]["isInRoom"] = true;
         changeStatus(socket,config.userStatus.PLAYING);
 
-        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:existingRoom})); 
+        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:existingRoom[existingRoomIndex]})); 
         socket.to(roomName).emit("onOpponentJoinRoom",setSuccessResponse('Room joined successfully.',{user:data.user})); 
         
-        var isRoomFull = shiftToFullRoom(gameData.existingRooms,roomName);
+        var isRoomFull = shiftToFullRoom(gameData.existingRooms,existingRoomIndex);
         if(isRoomFull){  
             io.in(roomName).emit("onGameStart",setSuccessResponse('Game Started.'));      
         }
@@ -106,18 +102,18 @@ function JoinRoom(socket,data,io){
 function removePlayerFromRoom(socket,rooms,roomName){
     console.log("removePlayerFromRoom : ",roomName);
     socket.leave(roomName);
-    var removedUser = removeUserFromRoom(rooms[roomName],socket.userId);
-        
-    rooms[roomName].noOfUsers--;
+    var removedUser = removeUserFromRoom(roomName,socket.userId);
+    var roomIndex = _.findIndex(rooms,{roomName:roomName});
+    rooms[roomIndex].noOfUsers--;
     gameData.connectedUser[socket.userId]["isInRoom"] = false;
     
     socket.emit('onLeaveRoom',setSuccessResponse('Leave room successfully.'));     
     
-    var responseData = setSuccessResponse('Leave room successfully.',{room:rooms[roomName],user:{userId:socket.userId}});
+    var responseData = setSuccessResponse('Leave room successfully.',{room:rooms[roomIndex],user:{userId:socket.userId}});
     socket.to(roomName).emit("onOpponentLeaveRoom",responseData);    
     
-    if(rooms[roomName].noOfUsers == 0){
-        _.unset(rooms,roomName);           
+    if(rooms[roomIndex].noOfUsers == 0){
+        _.unset(rooms,roomIndex);           
     }   
 }
 
