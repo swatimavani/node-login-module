@@ -2,7 +2,7 @@ var userController = require('../controller/userController');
 var roomServices = require('./socket.room.services');
 var friendRequestServices = require('./socket.friendsRequest.service');
 var {gameData,changeStatus} = require('./gameData/socket.roomData');
-const {setSuccessResponse,setErrorResponse} = require('../utility/common');
+const {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser} = require('../utility/common');
 module.exports = new SocketServices;
 
 function SocketServices() {   
@@ -31,11 +31,12 @@ SocketServices.prototype.gameStarted = function(data){
 SocketServices.prototype.removeUser = async function(socket){  
     console.log('Remove User');  
     try{
-        await this.leaveRoom(socket,null);
-        if(gameData.connectedUser[socket.userId]){
-            // delete gameData.connectedUser[socket.userId];   
-            changeStatus(socket,config.userStatus.OFFLINE)             
-        }
+        
+       
+        await this.leaveRoom(socket);
+        deleteUser(socket.userId);
+        changeStatus(socket,config.userStatus.OFFLINE,false)             
+   
     }catch(error){
         console.log("Error in remove user",error);
         socket.emit("onError",setErrorResponse('Internal server Error'));
@@ -44,8 +45,10 @@ SocketServices.prototype.removeUser = async function(socket){
  }
  
  SocketServices.prototype.leaveRoom = function(socket,data){   
-    roomServices.leaveRoom(socket,data);
-    changeStatus(socket.userId,config.userStatus.ONLINE);
+    
+ 
+    roomServices.leaveRoom(socket);
+    changeStatus(socket.userId,config.userStatus.ONLINE,false);
  }
 
  SocketServices.prototype.createFriendsRoom = function(socket,data){
@@ -85,29 +88,13 @@ SocketServices.prototype.messageToAll = function (data,io) {
 }
 function addUserInConnectedUser(socket,userId){
     socket.userId = userId;
-    let user = _.find(gameData.connectedUser, function(u){
-        return u.userId == userId;
-    });
-    if(!user){
-        gameData.connectedUser.push({
-            userId : userId,
-            socketId : socket.id,
-            isInRoom : false
+   
+    let user = {};
+    user.userId = userId,
+    user.socketId = socket.id;
+    user.isInRoom = false
 
-        });
-        changeStatus(socket,gameData.connectedUser.length-1,config.userStatus.ONLINE);
-        
-    }
-    // if(!gameData.connectedUser[userId] ){
-    //     gameData.connectedUser[userId] = new Array();
-    //     gameData.connectedUser[userId]["socketId"] = socket.id;   
-    //     gameData.connectedUser[userId]["isInRoom"] = false;
-    //     socket.emit("onAddUser",setSuccessResponse("Player is added"));   
-    //     changeStatus(socket,config.userStatus.ONLINE);
-    // }
-    else{
-        socket.emit("errorEvent",setErrorResponse("Player is already added"));
-    }
+    setUser(user);
     
 }
 

@@ -3,6 +3,8 @@ const _ = require('lodash');
 const constant = require('../../config/constant.conf');
 var userController = require('../../controller/userController');
 
+
+
 var gameData = {
     maxPlayersInRoom : config.game.maxPlayersInRoom,
     connectedUser : [],
@@ -52,15 +54,18 @@ var shiftToFullRoom = function (rooms,index){
 
 var changeStatus = async function(socket,index,status){   
     if(socket){
-        await userController.manageUserStatus(socket.userId,status); 
         if(gameData.connectedUser[index]){
             gameData.connectedUser[index].status = status; 
             socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
         }
+        await userController.manageUserStatus(socket.userId,status); 
         
     }
     // else
         // socket.emit("errorEvent",{"Somthing went wrong"});
         
 }
+
+
+
 module.exports = {gameData,generateRoomName,setRoomInfo,joinUserInRoom,shiftToFullRoom,changeStatus}
