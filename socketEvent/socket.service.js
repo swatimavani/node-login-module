@@ -85,13 +85,26 @@ SocketServices.prototype.messageToAll = function (data,io) {
 }
 function addUserInConnectedUser(socket,userId){
     socket.userId = userId;
-    if(!gameData.connectedUser[userId] ){
-        gameData.connectedUser[userId] = new Array();
-        gameData.connectedUser[userId]["socketId"] = socket.id;   
-        gameData.connectedUser[userId]["isInRoom"] = false;
-        socket.emit("onAddUser",setSuccessResponse("Player is added"));   
-        changeStatus(socket,config.userStatus.ONLINE);
+    let user = _.find(gameData.connectedUser, function(u){
+        return u.userId == userId;
+    });
+    if(!user){
+        gameData.connectedUser.push({
+            userId : userId,
+            socketId : socket.id,
+            isInRoom : false
+
+        });
+        changeStatus(socket,gameData.connectedUser.length-1,config.userStatus.ONLINE);
+        
     }
+    // if(!gameData.connectedUser[userId] ){
+    //     gameData.connectedUser[userId] = new Array();
+    //     gameData.connectedUser[userId]["socketId"] = socket.id;   
+    //     gameData.connectedUser[userId]["isInRoom"] = false;
+    //     socket.emit("onAddUser",setSuccessResponse("Player is added"));   
+    //     changeStatus(socket,config.userStatus.ONLINE);
+    // }
     else{
         socket.emit("errorEvent",setErrorResponse("Player is already added"));
     }
