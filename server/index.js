@@ -21,3 +21,9 @@ server.listen(config.PORT, () => {
     console.log("server on ",config.PORT);
     
 });
+
+const redis = require('redis');
+const client = redis.createClient();
+client.set('Hello','swati');
+
+client.get('Hello',console.log);

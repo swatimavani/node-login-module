@@ -98,13 +98,6 @@ function addUserInConnectedUser(socket,userId){
         changeStatus(socket,gameData.connectedUser.length-1,config.userStatus.ONLINE);
         
     }
-    // if(!gameData.connectedUser[userId] ){
-    //     gameData.connectedUser[userId] = new Array();
-    //     gameData.connectedUser[userId]["socketId"] = socket.id;   
-    //     gameData.connectedUser[userId]["isInRoom"] = false;
-    //     socket.emit("onAddUser",setSuccessResponse("Player is added"));   
-    //     changeStatus(socket,config.userStatus.ONLINE);
-    // }
     else{
         socket.emit("errorEvent",setErrorResponse("Player is already added"));
     }

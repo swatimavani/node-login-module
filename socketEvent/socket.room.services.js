@@ -17,7 +17,7 @@ function socketRoomServices(){
 socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     console.log('Create or Join: user id - ' + socket.userId);
     if(gameData.connectedUser[socket.userId] && !gameData.connectedUser[socket.userId]["isInRoom"]){
-        if(Object.keys(gameData.existingRooms).length == 0){
+        if(gameData.existingRooms.length == 0){
             await CreateRoom(socket,data);
         }else{
             JoinRoom(socket,data,io);
