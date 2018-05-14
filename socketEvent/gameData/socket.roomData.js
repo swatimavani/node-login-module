@@ -2,6 +2,7 @@ const uuidv1 = require('uuid/v1');
 const _ = require('lodash');
 const constant = require('../../config/constant.conf');
 var userController = require('../../controller/userController');
+const { setUser,getUser} = require('../utility/common');
 
 
 
@@ -43,7 +44,7 @@ var shiftToFullRoom = function (rooms,index){
         var firstRoom =  _.pullAt(rooms,[index]);
         if(firstRoom.length > 0){
             firstRoom[0].roomStatus = constant.roomStatus.FULL_ROOM;
-            gameData.fullRooms[firstRoom[0].roomName] = firstRoom[0];           
+            gameData.fullRooms.push(firstRoom[0]);           
         }
         return true;
     }
@@ -52,18 +53,17 @@ var shiftToFullRoom = function (rooms,index){
     }
 }
 
-var changeStatus = async function(socket,index,status){   
+var changeStatus = function(socket,status,isInRoom=false){ 
+    var userData = getUser(socket.userId);  
     if(socket){
-        if(gameData.connectedUser[index]){
-            gameData.connectedUser[index].status = status; 
+        userController.manageUserStatus(socket.userId,status); 
+        if(userData){
+            userData.isInRoom = isInRoom?isInRoom:false;
+            userData.status = status; 
+            setUser(userData);
             socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
-        }
-        await userController.manageUserStatus(socket.userId,status); 
-        
-    }
-    // else
-        // socket.emit("errorEvent",{"Somthing went wrong"});
-        
+        }   
+    }   
 }
 
 
