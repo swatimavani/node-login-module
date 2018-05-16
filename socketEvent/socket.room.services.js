@@ -17,12 +17,14 @@ function socketRoomServices(){
 socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     console.log('Create or Join: user id - ' + socket.userId);
 
-    let userData = getUser(socket.userId); 
-
-    if(userData && !userData.isInRoom){
+    let userData = await getUser(socket.userId);
+    
+    if(userData && userData.isInRoom === false){
+        console.log("Create",userData); 
         if(gameData.existingRooms.length == 0){
             await CreateRoom(socket,data,userData);
         }else{
+            console.log("Join",userData);
             JoinRoom(socket,data,io,userData);
         }
     }
@@ -82,15 +84,15 @@ function JoinRoom(socket,data,io,userData){
     console.log("Join room : ",data ); 
     var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.room.roomSize});
     if(existingRoomIndex >= 0){
-        data.user.userId = socket.userId;
-        roomName = existingRoom[existingRoomIndex].roomName;
         
+        data.user.userId = socket.userId;
+        roomName = gameData.existingRooms[existingRoomIndex].roomName;
         joinUserInRoom(gameData.existingRooms,existingRoomIndex,data);
         socket.join(roomName);
     
         changeStatus(socket,config.userStatus.PLAYING,true);
 
-        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:existingRoom[existingRoomIndex]})); 
+        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:gameData.existingRooms[existingRoomIndex]})); 
         socket.to(roomName).emit("onOpponentJoinRoom",setSuccessResponse('Room joined successfully.',{user:data.user})); 
         
         var isRoomFull = shiftToFullRoom(gameData.existingRooms,existingRoomIndex);

@@ -2,7 +2,7 @@ const uuidv1 = require('uuid/v1');
 const _ = require('lodash');
 const constant = require('../../config/constant.conf');
 var userController = require('../../controller/userController');
-const { setUser,getUser} = require('../utility/common');
+const {setUser,getUser} = require('../../utility/common');
 
 
 
@@ -53,14 +53,14 @@ var shiftToFullRoom = function (rooms,index){
     }
 }
 
-var changeStatus = function(socket,status,isInRoom=false){ 
-    var userData = getUser(socket.userId);  
+var changeStatus = async function(socket,status,isInRoom=false){ 
     if(socket){
-        userController.manageUserStatus(socket.userId,status); 
+        var userData = await getUser(socket.userId); 
         if(userData){
             userData.isInRoom = isInRoom?isInRoom:false;
             userData.status = status; 
-            setUser(userData);
+            await setUser(userData);
+            userController.manageUserStatus(socket.userId,status); 
             socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
         }   
     }   

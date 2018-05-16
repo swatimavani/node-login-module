@@ -31,10 +31,9 @@ SocketServices.prototype.gameStarted = function(data){
 SocketServices.prototype.removeUser = async function(socket){  
     console.log('Remove User');  
     try{
-        
-       
         await this.leaveRoom(socket);
-        deleteUser(socket.userId);
+        if(socket.userId)
+            await deleteUser(socket.userId);
         changeStatus(socket,config.userStatus.OFFLINE,false)             
    
     }catch(error){
@@ -48,7 +47,7 @@ SocketServices.prototype.removeUser = async function(socket){
     
  
     roomServices.leaveRoom(socket);
-    changeStatus(socket.userId,config.userStatus.ONLINE,false);
+    changeStatus(socket,config.userStatus.ONLINE,false);
  }
 
  SocketServices.prototype.createFriendsRoom = function(socket,data){
@@ -88,14 +87,13 @@ SocketServices.prototype.messageToAll = function (data,io) {
 }
 function addUserInConnectedUser(socket,userId){
     socket.userId = userId;
-   
     let user = {};
     user.userId = userId,
     user.socketId = socket.id;
-    user.isInRoom = false
-
+    user.isInRoom = false,
+    user.status = config.userStatus.ONLINE
     setUser(user);
-    
+    socket.emit("onAddUser",setSuccessResponse("Player is added"));  
 }
 
 

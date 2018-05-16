@@ -12,11 +12,12 @@ const constant = require('../config/constant.conf');
 
 module.exports = new socketFriendRequestServices;
 function socketFriendRequestServices(){
+    this.userData = {};
 }
 
-socketFriendRequestServices.prototype.createRoom =  function(socket,data){
-    let userData = getUser(socket.userId);
-    if(userData && !userData.isInRoom){
+socketFriendRequestServices.prototype.createRoom =  async function(socket,data){
+    let userData = await getUser(socket.userId);
+    if(userData && userData.isInRoom === false){
         var newRoom =  generateRoomName();
         data.room.roomName = newRoom;
         data.room.roomStatus = constant.roomStatus.FRIEND_ROOM;
@@ -37,14 +38,17 @@ socketFriendRequestServices.prototype.createRoom =  function(socket,data){
     }
 }
 
-socketFriendRequestServices.prototype.sendRequest = function(socket,data){
-    let userData = getUser(socket.userId);
+socketFriendRequestServices.prototype.sendRequest = async function(socket,data){
+    let userData = await getUser(socket.userId);
+    
     if(userData.isInRoom){
-        let friendUserData = getUser(data.friendUserId);
-        if(friendUserData && friendUserData.status == config.userStatus.ONLINE && !friendUserData.isInRoom){
+        console.log(data.friendUserId);
+        let friendUserData = await getUser(data.friendUserId);
+        console.log(friendUserData);
+        if(friendUserData && friendUserData.status == config.userStatus.ONLINE && friendUserData.isInRoom === false){
            console.log("data ", JSON.stringify(data));
-            var responseData = setSuccessResponse('Request send',{friendRequest:{userId:socket.userId,roomName:data.room.roomName}})
-            socket.to(friendUserData.socketId).emit("onSendRequest",responseData);
+            var responseData = setSuccessResponse('Request received.',{friendRequest:{userId:socket.userId,roomName:data.room.roomName}})
+            socket.to(friendUserData.socketId).emit("onReceiveRequest",responseData);
             socket.emit("onSendRequest",setErrorResponse("Request sent successfully."));
         }
         else{
@@ -63,13 +67,11 @@ socketFriendRequestServices.prototype.manageRequest = function(socket,data,io){
             socket.emit("onRoomNotFound",setErrorResponse("Room not found."));        
             return;
         }
-       data.user.userId = socket.userId;
-       console.log("data.user.userId ",data.user.userId);
-        
+        let roomName = gameData.friendRooms[friendRoomIndex];
+        data.user.userId = socket.userId;
         joinUserInRoom(gameData.friendRooms,friendRoomIndex,data);
         
-        socket.join(roomName);
-        // gameData.connectedUser[socket.userId]["isInRoom"] = true;        
+        socket.join(roomName);  
         changeStatus(socket,config.userStatus.PLAYING,true);
 
         socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:gameData.friendRooms[friendRoomIndex]})); 

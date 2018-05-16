@@ -75,15 +75,15 @@ var setRoomInfo = (roomData) => {
 // }
 
 var setUser = function(userData){
-    client.hset(config.database,JSON.stringify(userData.userId),JSON.stringify(userData));
+    return client.hset(config.database,userData.userId,JSON.stringify(userData));
 }
 var getUser = async function(userId){
-    const user = await client.hget(config.database,JSON.stringify(userId));
+    const user = await client.hget(config.database,userId);
     return JSON.parse(user);
 }
 
 var deleteUser = async function(userId){
-    client.del(config.database,userId);
+    client.hdel(config.database,userId);
 }
 
 module.exports = {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser};
