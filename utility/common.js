@@ -1,8 +1,7 @@
-const redis = require('redis');
-const client = redis.createClient();
 const util = require('util');
-client.hget = util.promisify(client.hget); 
-
+const _ = require('lodash');
+var {gameData} = require('../socketEvent/gameData/socket.roomData');
+let userIndex;
 var responseObj = {
     response :{
         status : false,
@@ -30,8 +29,6 @@ var setPlayerData = (userId,room) => {
     var playerData = {};
     playerData.playerId = userId;
     playerData.roomName = room.roomName;
-    // playerData.userName = room.userName;
-    // playerData.profileLink = room.profileLink;
     return playerData;
 }
 var setRoomInfo = (roomData) => {
@@ -75,15 +72,24 @@ var setRoomInfo = (roomData) => {
 // }
 
 var setUser = function(userData){
-    return client.hset(config.database,userData.userId,JSON.stringify(userData));
+    gameData.connectedUser.push(userData);
 }
+
 var getUser = async function(userId){
-    const user = await client.hget(config.database,userId);
-    return JSON.parse(user);
+    // userIndex = _.findIndex(gameData.connectedUser,['userId',userId]);
+    
+    if(userIndex < 0){
+        return null;
+    }
+    return gameData.connectedUser[userIndex];
 }
 
 var deleteUser = async function(userId){
-    client.hdel(config.database,userId);
+    userIndex = _.findIndex(gameData.connectedUser,{userId:userId});
+    if(userIndex < 0){
+        return true;    
+    }
+    gameData.connectedUser.splice(userIndex,1);
 }
 
 module.exports = {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser};
