@@ -7,68 +7,73 @@ var {   gameData,
         changeStatus
     } = require('./gameData/socket.roomData');
 const { setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser} = require('../utility/common');
+const {messages} = require('./../utility/messages'); 
 const constant = require('../config/constant.conf');
 module.exports = new socketRoomServices;
-
+let newRoom,roomInfo,roomIndex,removedUser,isRoomFull;
 function socketRoomServices(){
-
+    this.rooms = {};
+    this.room = {};
+   
+    this.userData= null;
+    
 }
 
 socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     console.log('Create or Join: user id - ' + socket.userId);
 
-    let userData = await getUser(socket.userId);
+    this.userData = await getUser(socket.userId,gameData.connectedUser);
     
-    if(userData && userData.isInRoom === false){
-        console.log("Create",userData); 
+    if(this.userData && this.userData.isInRoom === false){
+        console.log("Create",this.userData); 
         if(gameData.existingRooms.length == 0){
-            await CreateRoom(socket,data,userData);
+            await CreateRoom(socket,data,this.userData);
         }else{
             console.log("Join",userData);
-            JoinRoom(socket,data,io,userData);
+            JoinRoom(socket,data,io,this.userData);
         }
     }
     else{
-        socket.emit('onFailRoomCreate',setErrorResponse('Fail to create room.'));
+        socket.emit('onFailRoomCreate',setErrorResponse(messages.roomCreateFail));
     }    
 }
 socketRoomServices.prototype.leaveRoom = async function(socket){
-    let userData = await getUser(socket.userId);
-    if(userData && userData.isInRoom){
-        var rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
+    this.userData = await getUser(socket.userId,gameData.connectedUser);
+    if(this.userData && this.userData.isInRoom){
+       this.rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
        
-        var room = await _.find(rooms, function(o) {
+        this.room = await _.find(this.rooms, function(o) {
             return _.find(o.userList, {userId : socket.userId});
         });
         
-        if(room){
-            if(room.roomStatus == constant.roomStatus.EXISTING_ROOM){
-                removePlayerFromRoom(socket,gameData.existingRooms,room.roomName,userData);               
+        if(this.room){
+            if(this.room.roomStatus == constant.roomStatus.EXISTING_ROOM){
+                removePlayerFromRoom(socket,gameData.existingRooms,this.room.roomName,this.userData);               
             }
-            else if(room.roomStatus == constant.roomStatus.FULL_ROOM){
-                removePlayerFromRoom(socket,gameData.fullRooms,room.roomName,userData);               
+            else if(this.room.roomStatus == constant.roomStatus.FULL_ROOM){
+                removePlayerFromRoom(socket,gameData.fullRooms,this.room.roomName,this.userData);               
             }
             else{
-                removePlayerFromRoom(socket,gameData.friendRooms,room.roomName,userData);
+                removePlayerFromRoom(socket,gameData.friendRooms,this.room.roomName,this.userData);
             } 
             return;
         }
-        socket.emit('onLeaveRoom',setErrorResponse('Room does not exist.'));
+        socket.emit('onLeaveRoom',setErrorResponse(messages.roomNotExist));
         return;
     }
-    socket.emit('onLeaveRoom',setErrorResponse('user not connected.'));
+    socket.emit('onLeaveRoom',setErrorResponse(messages.userNotConnected));
 }
 
 function CreateRoom(socket,data,userData){   
     console.log("Create room",data);  
 
-    var newRoom =  generateRoomName();
+    newRoom =  generateRoomName();
     
     data.room.roomName = newRoom;
     data.room.roomStatus = constant.roomStatus.EXISTING_ROOM;
     data.user.userId = socket.userId;
     
-    var roomInfo = setRoomInfo(data);
+    roomInfo = setRoomInfo(data);
 
     gameData.existingRooms.push(roomInfo);
     
@@ -78,26 +83,26 @@ function CreateRoom(socket,data,userData){
 
     socket.join(data.room.roomName);
 
-    socket.emit("onCreateRoom",setSuccessResponse("Room created successfully.",{room:roomInfo}));      
+    socket.emit("onCreateRoom",setSuccessResponse(messages.roomCreateSuccessfully,{room:roomInfo}));      
 }
 function JoinRoom(socket,data,io,userData){
     console.log("Join room : ",data ); 
-    var existingRoomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.room.roomSize});
-    if(existingRoomIndex >= 0){
+    roomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.room.roomSize});
+    if(roomIndex >= 0){
         
         data.user.userId = socket.userId;
-        roomName = gameData.existingRooms[existingRoomIndex].roomName;
-        joinUserInRoom(gameData.existingRooms,existingRoomIndex,data);
+        roomName = gameData.existingRooms[roomIndex].roomName;
+        joinUserInRoom(gameData.existingRooms,roomIndex,data);
         socket.join(roomName);
     
         changeStatus(socket,config.userStatus.PLAYING,true);
 
-        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:gameData.existingRooms[existingRoomIndex]})); 
-        socket.to(roomName).emit("onOpponentJoinRoom",setSuccessResponse('Room joined successfully.',{user:data.user})); 
+        socket.emit("onJoinRoom",setSuccessResponse(messages.roomJoinSuccessfully,{room:gameData.existingRooms[roomIndex]})); 
+        socket.to(roomName).emit("onOpponentJoinRoom",setSuccessResponse(messages.roomJoinSuccessfully,{user:data.user})); 
         
-        var isRoomFull = shiftToFullRoom(gameData.existingRooms,existingRoomIndex);
+        isRoomFull = shiftToFullRoom(gameData.existingRooms,roomIndex);
         if(isRoomFull){  
-            io.in(roomName).emit("onGameStart",setSuccessResponse('Game Started.'));      
+            io.in(roomName).emit("onGameStart",setSuccessResponse(messages.gameStart));      
         }
     }else{
         CreateRoom(socket,data);
@@ -107,26 +112,26 @@ function JoinRoom(socket,data,io,userData){
 function removePlayerFromRoom(socket,rooms,roomName,user){
     console.log("removePlayerFromRoom : ",roomName);
     socket.leave(roomName);
-    var removedUser = removeUserFromRoom(roomName,socket.userId);
-    var roomIndex = _.findIndex(rooms,{roomName:roomName});
+    roomIndex = _.findIndex(rooms,{roomName:roomName});
+    removedUser = removeUserFromRoom(rooms,roomIndex,socket.userId);
     rooms[roomIndex].noOfUsers--;
     
     //reset user data in redis 
     user.isInRoom = false;
-    setUser(user);
+    setUser(user,gameData.connectedUser);
     //
-    socket.emit('onLeaveRoom',setSuccessResponse('Leave room successfully.'));     
+    socket.emit('onLeaveRoom',setSuccessResponse(messages.roomLeaveSuccessfully));     
     
-    var responseData = setSuccessResponse('Leave room successfully.',{room:rooms[roomIndex],user:{userId:socket.userId}});
-    socket.to(roomName).emit("onOpponentLeaveRoom",responseData);    
+
+    socket.to(roomName).emit("onOpponentLeaveRoom",setSuccessResponse(messages.roomLeaveSuccessfully,{room:rooms[roomIndex],user:{userId:socket.userId}}));    
     
     if(rooms[roomIndex].noOfUsers == 0){
         _.unset(rooms,roomIndex);           
     }   
 }
 
-function removeUserFromRoom(room,userId){
-    return _.remove(room.userList,function(user){
+function removeUserFromRoom(room,roomIndex,userId){
+    return _.remove(room[roomIndex].userList,function(user){
         if(user.userId == userId)
             return true;
         return false;

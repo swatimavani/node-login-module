@@ -1,6 +1,6 @@
 const util = require('util');
 const _ = require('lodash');
-var {gameData} = require('../socketEvent/gameData/socket.roomData');
+// var {gameData} = require('../socketEvent/gameData/socket.roomData');
 let userIndex;
 var responseObj = {
     response :{
@@ -71,25 +71,29 @@ var setRoomInfo = (roomData) => {
 
 // }
 
-var setUser = function(userData){
-    gameData.connectedUser.push(userData);
+var setUser = function(userData,connectedUser){
+    connectedUser.push(userData);
 }
 
-var getUser = async function(userId){
-    // userIndex = _.findIndex(gameData.connectedUser,['userId',userId]);
+
+var getUser = function(userId,connectedUser){
+    userIndex = _.findIndex(connectedUser,['userId',userId]);
+    console.log("userIndex",userIndex);
     
     if(userIndex < 0){
         return null;
     }
-    return gameData.connectedUser[userIndex];
+    return connectedUser[userIndex];
 }
 
-var deleteUser = async function(userId){
-    userIndex = _.findIndex(gameData.connectedUser,{userId:userId});
+var deleteUser = function(userId,connectedUser){
+    userIndex = _.findIndex(connectedUser,{userId:userId});
     if(userIndex < 0){
         return true;    
     }
-    gameData.connectedUser.splice(userIndex,1);
+    connectedUser.splice(userIndex,1);
+    console.log("connectedUser" , connectedUser);
+    
 }
 
 module.exports = {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser};

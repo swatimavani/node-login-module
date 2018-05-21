@@ -6,15 +6,17 @@ const {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser} = require
 module.exports = new SocketServices;
 
 function SocketServices() {   
+    this.user = {};
 }
 const maxPlayersInRoom = config.game.maxPlayersInRoom;
 
 SocketServices.prototype.addUser = async function(socket,data){   
     console.log("connected user ", data.userId);  
-    var userId = data.userId?data.userId:"";  
-    await addUserInConnectedUser(socket,userId);
+    
+    this.user.userId = data.userId?data.userId:"";  
+    console.log("this user ", this.user);  
+    await addUserInConnectedUser(socket,this.user);
 }
-
 SocketServices.prototype.createOrJoin = function(socket,data,io){
     // console.log("create Or Join ", data);
     roomServices.createOrJoin(socket,data,io);
@@ -31,10 +33,16 @@ SocketServices.prototype.gameStarted = function(data){
 SocketServices.prototype.removeUser = async function(socket){  
     console.log('Remove User');  
     try{
-        await this.leaveRoom(socket);
+        
+        await roomServices.leaveRoom(socket);
+        changeStatus(socket,config.userStatus.OFFLINE,false); 
         if(socket.userId)
-            await deleteUser(socket.userId);
-        changeStatus(socket,config.userStatus.OFFLINE,false)             
+            await deleteUser(socket.userId,gameData.connectedUser);
+            
+       
+       
+        
+
    
     }catch(error){
         console.log("Error in remove user",error);
@@ -85,14 +93,12 @@ SocketServices.prototype.messageToAll = function (data,io) {
     }
         
 }
-function addUserInConnectedUser(socket,userId){
-    socket.userId = userId;
-    let user = {};
-    user.userId = userId,
+async function addUserInConnectedUser(socket,user){
+    socket.userId = user.userId;
     user.socketId = socket.id;
     user.isInRoom = false,
-    user.status = config.userStatus.ONLINE
-    setUser(user);
+    user.status = config.userStatus.ONLINE  
+    setUser(user,gameData.connectedUser);
     socket.emit("onAddUser",setSuccessResponse("Player is added"));  
 }
 

@@ -16,7 +16,7 @@ function socketFriendRequestServices(){
 }
 
 socketFriendRequestServices.prototype.createRoom =  async function(socket,data){
-    let userData = await getUser(socket.userId);
+    let userData = await getUser(socket.userId,gameData.connectedUser);
     if(userData && userData.isInRoom === false){
         var newRoom =  generateRoomName();
         data.room.roomName = newRoom;
@@ -39,11 +39,11 @@ socketFriendRequestServices.prototype.createRoom =  async function(socket,data){
 }
 
 socketFriendRequestServices.prototype.sendRequest = async function(socket,data){
-    let userData = await getUser(socket.userId);
+    let userData = await getUser(socket.userId,gameData.connectedUser);
     
     if(userData.isInRoom){
         console.log(data.friendUserId);
-        let friendUserData = await getUser(data.friendUserId);
+        let friendUserData = await getUser(data.friendUserId,gameData.connectedUser);
         console.log(friendUserData);
         if(friendUserData && friendUserData.status == config.userStatus.ONLINE && friendUserData.isInRoom === false){
            console.log("data ", JSON.stringify(data));
@@ -83,7 +83,7 @@ socketFriendRequestServices.prototype.manageRequest = function(socket,data,io){
         }
     }
     else{
-        let userData = getUser(data.requestedUserId);
+        let userData = getUser(data.requestedUserId,gameData.connectedUser);
         if(userData)
             socket.to(userData.socketId).emit("onRejectRequest",setErrorResponse("player reject your request"));
     }
