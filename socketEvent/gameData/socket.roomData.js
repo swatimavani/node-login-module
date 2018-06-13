@@ -1,4 +1,5 @@
-const uuidv1 = require('uuid/v1');
+// const uuidv1 = require('uuid/v1');
+const nano = require('nanoseconds');
 const _ = require('lodash');
 const constant = require('../../config/constant.conf');
 var userController = require('../../controller/userController');
@@ -19,7 +20,8 @@ var gameData = {
 }
 
 var generateRoomName = function(){
-    newRoom = "room" + uuidv1();
+    newRoom = nano(process.hrtime());
+    // newRoom = "room" + uuidv1();
     rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
     if(_.find(rooms,{'roomName' : newRoom})){
         generateRoomName();

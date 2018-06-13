@@ -22,15 +22,15 @@ function socketRoomServices(){
 socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     console.log('Create or Join: user id - ' + socket.userId);
 
-    this.userData = await getUser(socket.userId,gameData.connectedUser);
+   var userData = await getUser(socket.userId,gameData.connectedUser);
     
-    if(this.userData && this.userData.isInRoom === false){
-        console.log("Create",this.userData); 
+    if(userData && userData.isInRoom === false){
+        console.log("Create",userData); 
         if(gameData.existingRooms.length == 0){
-            await CreateRoom(socket,data,this.userData);
+            await CreateRoom(socket,data,userData);
         }else{
             console.log("Join",userData);
-            JoinRoom(socket,data,io,this.userData);
+            JoinRoom(socket,data,io,userData);
         }
     }
     else{
