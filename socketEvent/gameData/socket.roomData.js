@@ -73,7 +73,7 @@ var changeStatus = async (socket,status,isInRoom)=>{
                 setUser(userData,gameData.connectedUser);
                 console.log("after setUser");
                 
-                userController.manageUserStatus(socket.userId,status); 
+                // userController.manageUserStatus(socket.userId,status); 
                 socket.broadcast.emit('onChangeStatus',{user:{userId:socket.userId,status:status}});
             }   
         }catch(e){
