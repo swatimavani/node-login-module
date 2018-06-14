@@ -1,4 +1,3 @@
-// const uuidv1 = require('uuid/v1');
 const nano = require('nanoseconds');
 const _ = require('lodash');
 const constant = require('../../config/constant.conf');
@@ -63,8 +62,6 @@ var shiftToFullRoom = function (rooms,index){
 var changeStatus = async (socket,status,isInRoom)=>{ 
     if(socket){
         try{
-            
-            
             userData =  getUser(socket.userId,gameData.connectedUser); 
             console.log("userData ", userData);
             if(userData){

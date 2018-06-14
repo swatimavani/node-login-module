@@ -17,6 +17,7 @@ function getExistingUser(deviceId){
 UserController.prototype.login = async function (req,res) {   
     
     var userData = _.pick(req.body,['deviceId','username','profileLink','data','email']);
+    res.set('Access-Control-Allow-Origin','*')
     try{
         var ExistingUser = await getExistingUser(userData.deviceId);
        

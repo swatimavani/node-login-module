@@ -1,6 +1,5 @@
 const util = require('util');
 const _ = require('lodash');
-// var {gameData} = require('../socketEvent/gameData/socket.roomData');
 let userIndex;
 var responseObj = {
     response :{

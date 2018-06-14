@@ -6,7 +6,7 @@ module.exports = (io) => {
     //io.origins('*:*'); 
     io.on('connection',(socket)=> {            
         
-        console.log("Connected");
+       
 
         socket.on('disconnect',()=>services.removeUser(socket));
 

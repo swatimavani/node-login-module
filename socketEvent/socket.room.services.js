@@ -10,7 +10,9 @@ const { setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser} = requir
 const {messages} = require('./../utility/messages'); 
 const constant = require('../config/constant.conf');
 module.exports = new socketRoomServices;
+
 let newRoom,roomInfo,roomIndex,removedUser,isRoomFull;
+
 function socketRoomServices(){
     this.rooms = {};
     this.room = {};
@@ -21,13 +23,13 @@ function socketRoomServices(){
 
 socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     console.log('Create or Join: user id - ' + socket.userId);
-
-   var userData = await getUser(socket.userId,gameData.connectedUser);
+    let userData = {};
+    userData = await getUser(socket.userId,gameData.connectedUser);
     
     if(userData && userData.isInRoom === false){
         console.log("Create",userData); 
         if(gameData.existingRooms.length == 0){
-            await CreateRoom(socket,data,userData);
+            await CreateRoom(socket,data, userData);
         }else{
             console.log("Join",userData);
             JoinRoom(socket,data,io,userData);
@@ -38,23 +40,26 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     }    
 }
 socketRoomServices.prototype.leaveRoom = async function(socket){
-    this.userData = await getUser(socket.userId,gameData.connectedUser);
-    if(this.userData && this.userData.isInRoom){
-       this.rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
+    let userData;
+    let room;
+    let rooms;
+    userData = await getUser(socket.userId,gameData.connectedUser);
+    if(userData && userData.isInRoom){
+       rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
        
-        this.room = await _.find(this.rooms, function(o) {
+        room = await _.find(rooms, function(o) {
             return _.find(o.userList, {userId : socket.userId});
         });
         
-        if(this.room){
-            if(this.room.roomStatus == constant.roomStatus.EXISTING_ROOM){
-                removePlayerFromRoom(socket,gameData.existingRooms,this.room.roomName,this.userData);               
+        if(room){
+            if(room.roomStatus == constant.roomStatus.EXISTING_ROOM){
+                removePlayerFromRoom(socket,gameData.existingRooms,room.roomName,userData);               
             }
-            else if(this.room.roomStatus == constant.roomStatus.FULL_ROOM){
-                removePlayerFromRoom(socket,gameData.fullRooms,this.room.roomName,this.userData);               
+            else if(room.roomStatus == constant.roomStatus.FULL_ROOM){
+                removePlayerFromRoom(socket,gameData.fullRooms,room.roomName,userData);               
             }
             else{
-                removePlayerFromRoom(socket,gameData.friendRooms,this.room.roomName,this.userData);
+                removePlayerFromRoom(socket,gameData.friendRooms,room.roomName,userData);
             } 
             return;
         }
@@ -66,7 +71,8 @@ socketRoomServices.prototype.leaveRoom = async function(socket){
 
 function CreateRoom(socket,data,userData){   
     console.log("Create room",data);  
-
+    let newRoom;
+    let roomInfo;
     newRoom =  generateRoomName();
     
     data.room.roomName = newRoom;
@@ -87,6 +93,9 @@ function CreateRoom(socket,data,userData){
 }
 function JoinRoom(socket,data,io,userData){
     console.log("Join room : ",data ); 
+    let roomIndex;
+    let roomName;
+    let isRoomFull;
     roomIndex = _.findIndex(gameData.existingRooms, {roomSize : data.room.roomSize});
     if(roomIndex >= 0){
         
@@ -110,6 +119,8 @@ function JoinRoom(socket,data,io,userData){
 }
 
 function removePlayerFromRoom(socket,rooms,roomName,user){
+    let roomIndex;
+    let removedUser;
     console.log("removePlayerFromRoom : ",roomName);
     socket.leave(roomName);
     roomIndex = _.findIndex(rooms,{roomName:roomName});
