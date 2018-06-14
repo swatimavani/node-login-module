@@ -20,9 +20,10 @@ SocketServices.prototype.getAllUser = async function (socket) {
 SocketServices.prototype.addUser = async function (socket, data) {
     // console.log("connected user ", data.userId);  
     let user = {};
-    user.userId = data.userId ? data.userId : nullString;
+    socket.userId = data.userId ? data.userId : nullString;
     // console.log("this user ", this.user);  
     addUserInConnectedUser(socket, user);
+    changeStatus(socket, config.userStatus.ONLINE, false);
 }
 SocketServices.prototype.createOrJoin = function (socket, data, io) {
     // console.log("create Or Join ", data);
@@ -43,12 +44,11 @@ SocketServices.prototype.removeUser = async function (socket) {
 
         await roomServices.leaveRoom(socket);
         changeStatus(socket, config.userStatus.OFFLINE, false);
-        if (socket.userId)
-            await deleteUser(socket.userId, gameData.connectedUser);
+        if (socket.userId) {
+            delete gameData.connectedUser[socket.userId];
+            // await deleteUser(socket.userId, gameData.connectedUser);
 
-
-
-
+        }
 
 
     } catch (error) {
@@ -80,8 +80,8 @@ SocketServices.prototype.manageRequest = function (socket, data, io) {
 SocketServices.prototype.message = function (socket, data) {
     try {
         if (data) {
-            if (data.room)
-                socket.to(data.room.roomName).emit(data.methodName, data);
+            if (data.roomName)
+                socket.to(data.roomName).emit(data.methodName, data);
             else
                 socket.emit(data.methodName, data);
         }
@@ -95,25 +95,20 @@ SocketServices.prototype.message = function (socket, data) {
 
 SocketServices.prototype.messageToAll = function (data, io) {
     if (data) {
-        if (data.room)
-            io.in(data.room.roomName).emit(data.methodName, data);
+        if (data.roomName)
+            io.in(data.roomName).emit(data.methodName, data);
     }
 
 }
 async function addUserInConnectedUser(socket, user) {
-    console.log(user.userId);
+    console.log(socket.userId);
     
-    let existingUserData = _.find(gameData.connectedUser, { userId: user.userId });
-    if (!existingUserData) {
-        socket.userId = user.userId;
-        user.socketId = socket.id;
-        user.isInRoom = false;
-        user.status = config.userStatus.ONLINE;
-        setUser(user, gameData.connectedUser);
-
-
-        socket.emit("onAddUser", setSuccessResponse("Player is added"));
-    }
+    let userObj = {};
+    user.socketId = socket.id;
+    user.status = config.userStatus.ONLINE;
+    user.isInRoom = false;
+    gameData.connectedUser[socket.userId] = user;
+    socket.emit("onAddUser", setSuccessResponse("Player is added", gameData.connectedUser[socket.userId]));
 }
 
 

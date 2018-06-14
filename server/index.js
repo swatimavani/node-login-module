@@ -5,7 +5,7 @@ global.config = conf;
 var routes = require('../router/user.route');
 var bodyParser = require('body-parser');
 const mongoose = require('../db/mongoose.js');
-const cache = require('../cache.js');
+
 
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
@@ -21,3 +21,4 @@ server.listen(config.PORT, () => {
     console.log("server on ",config.PORT);
     
 });
+
