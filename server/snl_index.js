@@ -19,5 +19,5 @@ require('../socketEvent/socket')(io);
 
 server.listen(config.PORT, () => {
     console.log("server on ",config.PORT);
-    
+
 });

@@ -6,7 +6,8 @@ let messages = {
     roomJoinSuccessfully : "Room joined successfully.",
     roomLeaveSuccessfully : "Leave room successfully.",
     userNotConnected : "user not connected.",
-    gameStart : "Game Started."
+    gameStart : "Game Started.",
+    ChangeStatus : "Status changed.",
 
 }
 

@@ -7,17 +7,19 @@ var {   gameData,
     shiftToFullRoom,
     changeStatus
 } = require('./gameData/socket.roomData');
-const { setSuccessResponse,setErrorResponse,setUser,getUser} = require('../utility/common');
+const { setSuccessResponse,setErrorResponse} = require('../utility/common');
 const constant = require('../config/constant.conf');
 
 module.exports = new socketFriendRequestServices;
-function socketFriendRequestServices(){
-    this.userData = {};
-}
+
+function socketFriendRequestServices(){}
 
 socketFriendRequestServices.prototype.createRoom =  async function(socket,data){
-    let userData = await getUser(socket.userId,gameData.connectedUser);
+    
+    let userData = gameData.connectedUser[socket.userId];
+    
     if(userData && userData.isInRoom === false){
+        
         var newRoom =  generateRoomName();
         data.room.roomName = newRoom;
         data.room.roomStatus = constant.roomStatus.FRIEND_ROOM;
@@ -39,18 +41,21 @@ socketFriendRequestServices.prototype.createRoom =  async function(socket,data){
 }
 
 socketFriendRequestServices.prototype.sendRequest = async function(socket,data){
-    let userData = await getUser(socket.userId,gameData.connectedUser);
+    
+    let userData = gameData.connectedUser[socket.userId];
     
     if(userData.isInRoom){
-        console.log(data.friendUserId);
-        let friendUserData = await getUser(data.friendUserId,gameData.connectedUser);
-        console.log(friendUserData);
+
+        let friendUserData = gameData.connectedUser[data.friendUserId];
+        
         if(friendUserData && friendUserData.status == config.userStatus.ONLINE && friendUserData.isInRoom === false){
-           console.log("data ", JSON.stringify(data));
+        
             var responseData = setSuccessResponse('Request received.',{friendRequest:{userId:socket.userId,roomName:data.room.roomName}})
             socket.to(friendUserData.socketId).emit("onReceiveRequest",responseData);
             socket.emit("onSendRequest",setErrorResponse("Request sent successfully."));
+        
         }
+        
         else{
             socket.emit("onSendRequest",setErrorResponse("Requested player playing or offline."));
         }
@@ -83,7 +88,7 @@ socketFriendRequestServices.prototype.manageRequest = function(socket,data,io){
         }
     }
     else{
-        let userData = getUser(data.requestedUserId,gameData.connectedUser);
+        let userData = gameData.connectedUser[data.requestedUserId];
         if(userData)
             socket.to(userData.socketId).emit("onRejectRequest",setErrorResponse("player reject your request"));
     }

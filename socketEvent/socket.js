@@ -26,7 +26,7 @@ module.exports = (io) => {
 
         socket.on('message', (data) => services.message(socket,data));
         
-        socket.on('messageToAll', (data) => services.messageToAll(data,io));  
+        socket.on('messageToAll', (data) => services.messageToAll(socket,data,io));  
 
         socket.on('getAllUser',() => services.getAllUser(socket));
     

@@ -1,12 +1,13 @@
-const uuidv1 = require('uuid/v1');
+// const uuidv1 = require('uuid/v1');
+const nano = require('nanoseconds');
 const _ = require('lodash');
 const constant = require('../../config/constant.conf');
 var userController = require('../../controller/userController');
 
-var {setUser,getUser} = require('../../utility/common');
+var {setSuccessResponse} = require('../../utility/common');
 
 const {messages} = require('./../../utility/messages');
-let newRoom,rooms,roomInfo,firstRoom,userData = {};
+let newRoom,rooms,roomInfo,firstRoom;
 
 
 var gameData = {
@@ -19,7 +20,8 @@ var gameData = {
 }
 
 var generateRoomName = function(){
-    newRoom = "room" + uuidv1();
+    // newRoom = "room" + uuidv1();
+    newRoom = nano(process.hrtime());
     rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
     if(_.find(rooms,{'roomName' : newRoom})){
         generateRoomName();
@@ -44,66 +46,36 @@ var joinUserInRoom = (rooms,roomIndex,data) => {
 } 
 
 var shiftToFullRoom = function (rooms,index){
-   //only for teenpatti
-
-    // if(rooms[index].noOfUsers == rooms[index].roomSize){
-
-    //mapping
     firstRoom = _.pick(rooms, [index]);
     delete rooms[index];
-    //
-    // firstRoom =  _.pullAt(rooms,[index]);
-    console.log("firstRoom", JSON.stringify(firstRoom));
-
-    console.log("shiftToFullRoom", JSON.stringify(rooms));
 
     if (firstRoom) {
-        //mapping
         firstRoom[index].roomStatus = constant.roomStatus.FULL_ROOM;
         gameData.fullRooms[index] = firstRoom[index];
-
-        //
-        // firstRoom[0].roomStatus = constant.roomStatus.FULL_ROOM;
-        // gameData.fullRooms.push(firstRoom[0]);           
+         
         return true;
 
     }
     return false;
-    // }
-    // else{
-    // return false;
-    // }
 }
 
 
 var changeStatus = async (socket,status,isInRoom)=>{ 
     if (socket) {
         try {
-
-
-            userData = gameData.connectedUser[socket.userId];
-            //console.log("userData ", userData);
-           
-            if (gameData.connectedUser[socket.userId]) {
+            if(gameData.connectedUser[socket.userId]) {
                 
                 gameData.connectedUser[socket.userId].isInRoom = isInRoom ? isInRoom : false;
                 
                 gameData.connectedUser[socket.userId].status = status;
-                //console.log("before setUser");
-
-               // setUser(userData, gameData.connectedUser);
-                //console.log("after setUser");
 
                 userController.manageUserStatus(socket.userId,status); 
                 socket.broadcast.emit('onChangeStatus', { user: { userId: socket.userId, status: status } });
             }
         } catch (e) {
             console.log("change Status", e);
-
         }
     }   
 }
-
-
 
 module.exports = {gameData,generateRoomName,setRoomInfo,joinUserInRoom,shiftToFullRoom,changeStatus}

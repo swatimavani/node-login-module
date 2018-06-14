@@ -93,10 +93,13 @@ SocketServices.prototype.message = function (socket, data) {
 
 }
 
-SocketServices.prototype.messageToAll = function (data, io) {
+SocketServices.prototype.messageToAll = function (socket,data, io) {
+    console.log('Message to all');
     if (data) {
         if (data.roomName)
             io.in(data.roomName).emit(data.methodName, data);
+        else
+            socket.emit(data.methodName, data);
     }
 
 }
