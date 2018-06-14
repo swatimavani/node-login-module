@@ -23,16 +23,22 @@ const carrom = {
     }
 }
 
-const test = {
+const snl = {
     PORT:3002,
-    database:"snackes_ladders",
+    database:"snl",
     secret:"Snl12#",
-    userStatus:['offline','online','playing'],
+    userStatus:{
+        ONLINE:"online",
+        OFFLINE:"offline",
+        PLAYING:"playing",
+        REQUESTED:"requested"
+    },
     game:{
         primaryCurrency:10,
         secondaryCurrency:100,       
-		maxPlayersInRoom : 2       
-    }   
+		maxPlayersInRoom : 2      
+    }
 }
 
-module.exports = {carrom,test,roomStatus};
+
+module.exports = {carrom,snl,roomStatus};
