@@ -1,14 +1,9 @@
-// const uuidv1 = require('uuid/v1');
 const nano = require('nanoseconds');
 const _ = require('lodash');
 const constant = require('../../config/constant.conf');
-var userController = require('../../controller/userController');
-
 var {setSuccessResponse} = require('../../utility/common');
 
-const {messages} = require('./../../utility/messages');
 let newRoom,rooms,roomInfo,firstRoom;
-
 
 var gameData = {
     maxPlayersInRoom : config.game.maxPlayersInRoom,
@@ -20,15 +15,15 @@ var gameData = {
 }
 
 var generateRoomName = function(){
-    // newRoom = "room" + uuidv1();
-    newRoom = nano(process.hrtime());
+    newRoom = (nano(process.hrtime())).toString();
+
     rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
-    if(_.find(rooms,{'roomName' : newRoom})){
+    if(rooms[newRoom]){
         generateRoomName();
     }else{
+        rooms= null;
         return newRoom;
     }
-    
 }
 
 var setRoomInfo = (roomData) => {
@@ -50,6 +45,7 @@ var shiftToFullRoom = function (rooms,index){
     delete rooms[index];
 
     if (firstRoom) {
+        
         firstRoom[index].roomStatus = constant.roomStatus.FULL_ROOM;
         gameData.fullRooms[index] = firstRoom[index];
          
@@ -67,10 +63,9 @@ var changeStatus = async (socket,status,isInRoom)=>{
                 
                 gameData.connectedUser[socket.userId].isInRoom = isInRoom ? isInRoom : false;
                 
-                gameData.connectedUser[socket.userId].status = status;
+                gameData.connectedUser[socket.userId].status = status;               
 
-                userController.manageUserStatus(socket.userId,status); 
-                socket.broadcast.emit('onChangeStatus', { user: { userId: socket.userId, status: status } });
+                socket.broadcast.emit('onChangeStatus', setSuccessResponse('Status changed',{user: { userId: socket.userId, status: status }}));
             }
         } catch (e) {
             console.log("change Status", e);

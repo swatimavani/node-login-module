@@ -1,10 +1,10 @@
 
 module.exports = new UserController;
 const _ = require('lodash');
-const {MongooseError} = require('mongoose');
 const {User} = require('../models/user');
 const {Token} = require('../models/user');
 const {setSuccessResponse,setErrorResponse} = require('../utility/common');
+const {gameData} = require('../socketEvent/gameData/socket.roomData');
 
 
 function  UserController() {
@@ -17,7 +17,7 @@ function getExistingUser(deviceId){
 UserController.prototype.login = async function (req,res) {   
     
     var userData = _.pick(req.body,['deviceId','username','profileLink','data','email']);
-    res.set('Access-Control-Allow-Origin','*')
+    res.set('Access-Control-Allow-Origin','*');
     try{
         var ExistingUser = await getExistingUser(userData.deviceId);
        
@@ -109,10 +109,19 @@ UserController.prototype.manageUserStatus = async function(userId,status){
 
 UserController.prototype.getAllFriends = async function(req,res){
     var friendIds = req.body.friendIds?req.body.friendIds:[];
-    var users = await User.find({facebookId:{$in: friendIds}});
-    if(users)
-        this.response = setSuccessResponse("Retrieved all friends.",users); 
-    else
+    var users = await User.find({facebookId:{$in: friendIds}});   
+    if(users){
+        let OnlineUsers = [];
+        users.forEach((user) => {
+            var userId = user._id.toString();
+            if(gameData.connectedUser[userId]){
+                OnlineUsers.push(user);
+            }
+        });
+        this.response = setSuccessResponse("Retrieved all friends.",OnlineUsers);
+    } 
+    else{
         this.response = setSuccessResponse("No friends found"); 
+    }
     res.send(this.response);
 }

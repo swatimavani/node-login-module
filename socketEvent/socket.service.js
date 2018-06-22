@@ -1,32 +1,22 @@
-var userController = require('../controller/userController');
 var roomServices = require('./socket.room.services');
 var friendRequestServices = require('./socket.friendsRequest.service');
 var { gameData, changeStatus } = require('./gameData/socket.roomData');
-const { setSuccessResponse, setErrorResponse, setUser, getUser, deleteUser } = require('../utility/common');
+const { setSuccessResponse, setErrorResponse, log } = require('../utility/common');
 const _ = require('lodash');
 module.exports = new SocketServices;
-const nullString = "";
 function SocketServices() {
-    this.user = {};
 }
-const maxPlayersInRoom = config.game.maxPlayersInRoom;
 
-SocketServices.prototype.getAllUser = async function (socket) {
-    socket.emit("onGet", { user: gameData.connectedUser.length, eRoom: gameData.existingRooms.length, fRoom: gameData.fullRooms.length });
-    // console.log(gameData.connectedUser[20]);
-
-
-}
 SocketServices.prototype.addUser = async function (socket, data) {
-    // console.log("connected user ", data.userId);  
-    let user = {};
-    socket.userId = data.userId ? data.userId : nullString;
-    // console.log("this user ", this.user);  
-    addUserInConnectedUser(socket, user);
+    log('add user: ' + JSON.stringify(data));
+    
+    socket.userId = data.userId ? data.userId : "";
+
+    log('add user in socket: ' +socket.userId);
+    addUserInConnectedUser(socket);
     changeStatus(socket, config.userStatus.ONLINE, false);
 }
 SocketServices.prototype.createOrJoin = function (socket, data, io) {
-    // console.log("create Or Join ", data);
     roomServices.createOrJoin(socket, data, io);
 }
 
@@ -39,20 +29,18 @@ SocketServices.prototype.gameStarted = function (data) {
 }
 
 SocketServices.prototype.removeUser = async function (socket) {
-    console.log('Remove User');
+    log('Remove User');
     try {
 
         await roomServices.leaveRoom(socket);
         changeStatus(socket, config.userStatus.OFFLINE, false);
         if (socket.userId) {
             delete gameData.connectedUser[socket.userId];
-            // await deleteUser(socket.userId, gameData.connectedUser);
-
         }
 
 
     } catch (error) {
-        console.log("Error in remove user", error);
+        log("Error in remove user", error);
         socket.emit("onError", setErrorResponse('Internal server Error'));
     }
 
@@ -78,23 +66,25 @@ SocketServices.prototype.manageRequest = function (socket, data, io) {
 }
 
 SocketServices.prototype.message = function (socket, data) {
+    log("message",data);
     try {
         if (data) {
-            if (data.roomName)
+            if (data.roomName){               
                 socket.to(data.roomName).emit(data.methodName, data);
+            }
+
             else
                 socket.emit(data.methodName, data);
         }
-        console.log('try block');
     } catch (error) {
-        console.log("Error in remove user", error);
+        log("Error in Message", error);
         socket.emit("onError", setErrorResponse('Internal server Error'));
     }
 
 }
 
 SocketServices.prototype.messageToAll = function (socket,data, io) {
-    console.log('Message to all');
+    log('Message to all');
     if (data) {
         if (data.roomName)
             io.in(data.roomName).emit(data.methodName, data);
@@ -103,10 +93,8 @@ SocketServices.prototype.messageToAll = function (socket,data, io) {
     }
 
 }
-async function addUserInConnectedUser(socket, user) {
-    console.log(socket.userId);
-    
-    let userObj = {};
+async function addUserInConnectedUser(socket) {
+    let user = {};
     user.socketId = socket.id;
     user.status = config.userStatus.ONLINE;
     user.isInRoom = false;

@@ -1,5 +1,6 @@
-const util = require('util');
 const _ = require('lodash');
+var winston = require('winston');
+require('winston-daily-rotate-file');
 let userIndex;
 var responseObj = {
     response :{
@@ -40,35 +41,25 @@ var setRoomInfo = (roomData) => {
     // roomInfo.roomStatus = roomData.room.roomStatus;  
 }
 
-// function createLogger(){
-//     var winston = require('winston');
-//     require('winston-daily-rotate-file');
+function createLogger(){
+    var transport = new (winston.transports.DailyRotateFile)({
+        filename: './log/'+config.database,
+        datePattern: 'yyyy-MM-dd.log',
+        maxSize: '20m',
+        maxFiles: '5d',
+      });
 
-//     var transport = new (winston.transports.DailyRotateFile)({
-//     filename: 'application-%DATE%.log',
-//     datePattern: 'YYYY-MM-DD-HH',
-//     zippedArchive: true,
-//     maxSize: '20m',
-//     maxFiles: '14d'
-//     });
+    var logger = new (winston.Logger)({
+        transports: [transport]
+    });
+    return logger;
+}
 
-//     transport.on('rotate', function(oldFilename, newFilename) {
-//     // do something fun
-//     });
-
-//     var logger = new (winston.Logger)({
-//         transports: [
-//             transport
-//         ]
-//     });
-//     return logger;
-// }
-
-
-// var log = async function(type,message){
-//     var logger = await createLogger();
-
-// }
+var log = async function(message){
+    var logger = await createLogger();    
+    console.log(message);
+    logger.info(message);
+}
 
 var setUser = function(userData,connectedUser){
     connectedUser.push(userData);
@@ -95,4 +86,4 @@ var deleteUser = function(userId,connectedUser){
     
 }
 
-module.exports = {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser};
+module.exports = {setSuccessResponse,setErrorResponse,setUser,getUser,deleteUser,log};

@@ -1,4 +1,3 @@
-const uuidv1 = require('uuid/v1');
 const _ = require('lodash');
 var {   gameData,
     generateRoomName,
@@ -15,20 +14,19 @@ module.exports = new socketFriendRequestServices;
 function socketFriendRequestServices(){}
 
 socketFriendRequestServices.prototype.createRoom =  async function(socket,data){
-    
     let userData = gameData.connectedUser[socket.userId];
     
     if(userData && userData.isInRoom === false){
         
-        var newRoom =  generateRoomName();
+        var newRoom =  await generateRoomName();
+        
         data.room.roomName = newRoom;
         data.room.roomStatus = constant.roomStatus.FRIEND_ROOM;
         
         data.user.userId = socket.userId;
         
         var roomInfo = setRoomInfo(data);
-        gameData.friendRooms.push(roomInfo); 
-        
+        gameData.friendRooms[newRoom] = roomInfo; 
         
         changeStatus(socket,config.userStatus.PLAYING,true);
         
@@ -46,16 +44,15 @@ socketFriendRequestServices.prototype.sendRequest = async function(socket,data){
     
     if(userData.isInRoom){
 
-        let friendUserData = gameData.connectedUser[data.friendUserId];
+        let friendUserData = gameData.connectedUser[data.friendUserId]?gameData.connectedUser[data.friendUserId]:null;
         
         if(friendUserData && friendUserData.status == config.userStatus.ONLINE && friendUserData.isInRoom === false){
-        
+            gameData.connectedUser[data.friendUserId].status = config.userStatus.PLAYING;
             var responseData = setSuccessResponse('Request received.',{friendRequest:{userId:socket.userId,roomName:data.room.roomName}})
             socket.to(friendUserData.socketId).emit("onReceiveRequest",responseData);
             socket.emit("onSendRequest",setErrorResponse("Request sent successfully."));
         
         }
-        
         else{
             socket.emit("onSendRequest",setErrorResponse("Requested player playing or offline."));
         }
@@ -66,29 +63,31 @@ socketFriendRequestServices.prototype.sendRequest = async function(socket,data){
 }
 
 socketFriendRequestServices.prototype.manageRequest = function(socket,data,io){
+    
     if(data.status == "accept"){
-        var friendRoomIndex = _.findIndex(gameData.friendRooms,{roomName:data.room.roomName});
-        if(friendRoomIndex < 0){
+        let roomName = data.room.roomName;
+        if(!gameData.friendRooms[roomName]){
             socket.emit("onRoomNotFound",setErrorResponse("Room not found."));        
             return;
         }
-        let roomName = gameData.friendRooms[friendRoomIndex];
+        
         data.user.userId = socket.userId;
         joinUserInRoom(gameData.friendRooms,friendRoomIndex,data);
         
         socket.join(roomName);  
         changeStatus(socket,config.userStatus.PLAYING,true);
 
-        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:gameData.friendRooms[friendRoomIndex]})); 
+        socket.emit("onJoinRoom",setSuccessResponse('Room joined successfully.',{room:gameData.friendRooms[roomName]})); 
         socket.to(roomName).emit("onOpponentJoinRoom",setSuccessResponse('Room joined successfully.',{user:data.user})); 
         
-        var isRoomFull = shiftToFullRoom(gameData.friendRooms,friendRoomIndex);
+        var isRoomFull = shiftToFullRoom(gameData.friendRooms,roomName);
         if(isRoomFull){
             io.in(roomName).emit("onGameStart",setSuccessResponse('Can play'));   
         }
     }
     else{
         let userData = gameData.connectedUser[data.requestedUserId];
+        gameDate.connectedUser[socket.userId].status = config.userStatus.ONLINE;
         if(userData)
             socket.to(userData.socketId).emit("onRejectRequest",setErrorResponse("player reject your request"));
     }

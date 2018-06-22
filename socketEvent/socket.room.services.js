@@ -6,7 +6,7 @@ var {   gameData,
         shiftToFullRoom,
         changeStatus
     } = require('./gameData/socket.roomData');
-const { setSuccessResponse,setErrorResponse} = require('../utility/common');
+const { setSuccessResponse,setErrorResponse, log} = require('../utility/common');
 const {messages} = require('./../utility/messages'); 
 const constant = require('../config/constant.conf');
 module.exports = new socketRoomServices;
@@ -15,7 +15,8 @@ module.exports = new socketRoomServices;
 function socketRoomServices(){}
 
 socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
-    console.log('Create or Join: user id - ' + socket.userId);
+    log('Create or Join: ' + JSON.stringify(data));
+    log('Create or Join: ' + socket.userId);
     let userData = {};
 
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId].isInRoom === false){
@@ -31,7 +32,7 @@ socketRoomServices.prototype.createOrJoin = async function(socket,data,io){
     }     
 }
 socketRoomServices.prototype.leaveRoom = async function(socket){
-
+    log('Leave Room: ' + socket.userId);
     if(gameData.connectedUser[socket.userId] && gameData.connectedUser[socket.userId].isInRoom){
 
        let rooms = Object.assign({}, gameData.fullRooms, gameData.existingRooms,gameData.friendRooms);
@@ -66,7 +67,7 @@ socketRoomServices.prototype.leaveRoom = async function(socket){
 }
 
 function CreateRoom(socket,data){   
-    console.log("Create room",data);  
+    log('Create Room: ' + JSON.stringify(data));
     let newRoom =  generateRoomName();
 
     data.room.roomStatus = constant.roomStatus.EXISTING_ROOM;
@@ -85,7 +86,7 @@ function CreateRoom(socket,data){
     
 }
 function JoinRoom(socket,data,io){
-    console.log("Join room : ",data ); 
+    log('Join Room: ' + JSON.stringify(data));
         
     let isRoomFull;
     let roomName = _.findKey(gameData.existingRooms,function(roomElement) {
@@ -117,6 +118,8 @@ function JoinRoom(socket,data,io){
 }
 
 function removePlayerFromRoom(socket,rooms,roomName){
+    log("Remove Player From Room : "+ roomName ); 
+
     let roomIndex;
 
     socket.leave(roomName);
@@ -127,10 +130,10 @@ function removePlayerFromRoom(socket,rooms,roomName){
     
     gameData.connectedUser[socket.userId].isInRoom = false;
  
-    socket.emit('onLeaveRoom',setSuccessResponse(messages.roomLeaveSuccessfully));     
- 
     socket.to(roomName).emit("onOpponentLeaveRoom",setSuccessResponse(messages.roomLeaveSuccessfully,{room:rooms[roomIndex],user:{userId:socket.userId}}));    
     
+    socket.emit('onLeaveRoom',setSuccessResponse(messages.roomLeaveSuccessfully));     
+ 
     if(rooms[roomName].noOfUsers == 0){       
         delete rooms[roomName];         
     }else{
